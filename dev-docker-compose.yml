@@ -1,6 +1,8 @@
 services:
     webuntis-timetable:
-        image: nlion/ics-webuntis:latest
+        build:
+            context: .
+            dockerfile: Dockerfile
         container_name: webuntis-timetable
         environment:
             - NODE_ENV=production
