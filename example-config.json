@@ -1,0 +1,14 @@
+{
+    "daysBefore": 7,
+    "daysAfter": 14,
+    "cacheDuration": 300,
+    "users": [
+        {
+            "school": "",
+            "username": "",
+            "password": "",
+            "baseurl": "",
+            "friendlyName": ""
+        }
+    ]
+}

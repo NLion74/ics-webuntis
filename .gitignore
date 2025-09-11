@@ -1,0 +1,9 @@
+dev-config.json
+./app
+.DS_Store
+dist
+node_modules
+*.log
+*.tsbuildinfo
+.vscode
+npm-debug.log*

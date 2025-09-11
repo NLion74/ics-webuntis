@@ -1,0 +1,22 @@
+{
+    "name": "webuntis-timetable",
+    "version": "1.0.0",
+    "type": "commonjs",
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "start": "node dist/index.js",
+        "dev": "ts-node src/index.ts"
+    },
+    "dependencies": {
+        "express": "^5.1.0",
+        "ical-generator": "^9.0.0",
+        "ics": "^3.8.1",
+        "webuntis": "^2.2.1"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.3",
+        "@types/node": "^24.3.1",
+        "ts-node": "^x.x.x",
+        "typescript": "^x.x.x"
+    }
+}

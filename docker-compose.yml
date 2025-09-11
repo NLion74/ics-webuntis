@@ -1,0 +1,15 @@
+services:
+    webuntis-timetable:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: webuntis-timetable
+        environment:
+            - NODE_ENV=production
+            - PORT=7464
+            - CONFIG_FILE=/app/config.json
+        volumes:
+            - ./dev-config.json:/app/config.json:ro
+        ports:
+            - "7464:7464"
+        restart: unless-stopped
