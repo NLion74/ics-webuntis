@@ -25,21 +25,21 @@ jobs:
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
 
             - name: Determine version
-                id: version
-                run: |
-                    if [ -n "${GITHUB_REF#refs/tags/}" ]; then
-                      VERSION=${GITHUB_REF#refs/tags/}
-                    else
-                      VERSION=$(curl -s https://api.github.com/repos/NLion74/ics-webuntis/releases/latest | jq -r .tag_name)
-                    fi
-                    echo "VERSION=$VERSION" >> $GITHUB_ENV
+              id: version
+              run: |
+                  if [ -n "${GITHUB_REF#refs/tags/}" ]; then
+                    VERSION=${GITHUB_REF#refs/tags/}
+                  else
+                    VERSION=$(curl -s https://api.github.com/repos/NLion74/ics-webuntis/releases/latest | jq -r .tag_name)
+                  fi
+                  echo "VERSION=$VERSION" >> $GITHUB_ENV
 
             - name: Build and push Docker image
               uses: docker/build-push-action@v4
               with:
-                context: .
-                file: Dockerfile
-                push: true
-                tags: nlion/ics-webuntis:${{ env.VERSION }},nlion/ics-webuntis:latest
-                cache-from: type=registry,ref=nlion/ics-webuntis:latest
-                cache-to: type=inline
+                  context: .
+                  file: Dockerfile
+                  push: true
+                  tags: nlion/ics-webuntis:${{ env.VERSION }},nlion/ics-webuntis:latest
+                  cache-from: type=registry,ref=nlion/ics-webuntis:latest
+                  cache-to: type=inline
