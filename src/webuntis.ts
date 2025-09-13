@@ -8,8 +8,8 @@ interface SessionEntry {
     timestamp: number;
 }
 
-const sessionCache = new Map<string, SessionEntry>();
-const SESSION_TTL_MS = 5 * 60 * 1000; // 5 minutes
+export const sessionCache = new Map<string, SessionEntry>();
+export const SESSION_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 async function getUntisSession(user: User): Promise<WebUntis> {
     const cached = sessionCache.get(user.username);
@@ -41,7 +41,6 @@ export async function fetchTimetable(
     const untis = await getUntisSession(user);
 
     try {
-        await untis.login();
         const rawTimetable = await untis.getOwnTimetableForRange(
             startDate,
             endDate
@@ -59,9 +58,9 @@ export async function fetchTimetable(
             .map((entry: any) => ({
                 startTime: entry.startTime,
                 endTime: entry.endTime,
-                subject: entry.su?.[0]?.longname || "Event",
+                subject: entry.su?.[0]?.name || "Event",
                 teacher: entry.te?.[0]?.name || "Unknown Teacher",
-                room: entry.ro?.[0]?.longname || "Unknown Room",
+                room: entry.ro?.[0]?.name || "Unknown Room",
                 class:
                     entry.kl?.[1]?.longname ||
                     entry.kl?.[0]?.longname ||
@@ -70,7 +69,9 @@ export async function fetchTimetable(
             }));
 
         return mergeLessons(lessons);
-    } finally {
+    } catch (error) {
         await untis.logout();
+        sessionCache.delete(user.username);
+        throw error;
     }
 }

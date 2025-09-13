@@ -1,6 +1,6 @@
 {
     "name": "webuntis-timetable",
-    "version": "1.0.0",
+    "version": "0.2.0",
     "type": "commonjs",
     "scripts": {
         "build": "tsc -p tsconfig.json",
@@ -14,7 +14,7 @@
     },
     "devDependencies": {
         "@types/express": "^5.0.3",
-        "@types/node": "^24.3.1",
+        "@types/node": "24.3.3",
         "ts-node": "^x.x.x",
         "typescript": "^x.x.x"
     }

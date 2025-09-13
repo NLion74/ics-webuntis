@@ -1,4 +1,3 @@
-// src/ics.ts
 import ical, { ICalEventStatus } from "ical-generator";
 import { Lesson } from "./types";
 

@@ -3,14 +3,25 @@ import { loadConfig } from "./config";
 import { fetchTimetable } from "./webuntis";
 import { lessonsToIcs } from "./ics";
 import { CacheEntry } from "./types";
+import { sessionCache, SESSION_TTL_MS } from "./webuntis";
+import { CacheHandler } from "./cacheHandler";
 
 async function main() {
     const { config, configPath } = await loadConfig();
     console.log(`Loaded config from ${configPath}`);
 
     const app = express();
+    const icsCache = new CacheHandler(config.cacheDuration);
 
-    const icsCache = new Map<string, CacheEntry>();
+    function sendIcs(res: express.Response, filename: string, ics: string) {
+        return res
+            .setHeader("Content-Type", "text/calendar")
+            .setHeader(
+                "Content-Disposition",
+                `attachment; filename=${filename}.ics`
+            )
+            .send(ics);
+    }
 
     app.get("/timetable/:name", async (req, res) => {
         try {
@@ -21,19 +32,9 @@ async function main() {
             );
             if (!user) return res.status(404).send("User not found");
 
-            const now = Date.now();
-            const cache = icsCache.get(user.username);
-            if (
-                cache &&
-                now - cache.timestamp < config.cacheDuration * 60 * 60 * 24
-            ) {
-                return res
-                    .setHeader("Content-Type", "text/calendar")
-                    .setHeader(
-                        "Content-Disposition",
-                        `attachment; filename=${user.friendlyName}.ics`
-                    )
-                    .send(cache.ics);
+            const cacheEntry = icsCache.get(user.username);
+            if (cacheEntry) {
+                return sendIcs(res, user.friendlyName, cacheEntry.ics);
             }
 
             const today = new Date();
@@ -48,14 +49,7 @@ async function main() {
                 config.timezone || "Europe/Berlin"
             );
 
-            icsCache.set(user.username, { timestamp: now, ics });
-
-            res.setHeader("Content-Type", "text/calendar");
-            res.setHeader(
-                "Content-Disposition",
-                `attachment; filename=${user.friendlyName}.ics`
-            );
-            res.send(ics);
+            return sendIcs(res, user.friendlyName, ics);
         } catch (err) {
             console.error(err);
             res.status(500).send("Error fetching timetable");
