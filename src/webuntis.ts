@@ -46,7 +46,9 @@ export async function fetchTimetable(
             endDate
         );
 
-        const lessons: Lesson[] = rawTimetable
+        let lessons: Lesson[] = [];
+
+        lessons = rawTimetable
             .filter((entry: any) => {
                 const subject = entry.su?.[0]?.longname?.toLowerCase() ?? "";
                 const teacher = entry.te?.[0]?.name?.toLowerCase() ?? "";

@@ -1,17 +1,45 @@
 import fs from "fs/promises";
+import { watch } from "fs";
 import path from "path";
 import { Config } from "./types";
 
-export async function loadConfig(): Promise<{
-    config: Config;
-    configPath: string;
-}> {
-    const envPath =
-        process.env.CONFIG_PATH ?? process.env.CONFIG_FILE ?? "config.json";
-    const resolved = path.resolve(envPath);
+class ConfigManager {
+    private static instance: ConfigManager;
+    private _config!: Config;
+    readonly filePath: string;
 
-    try {
-        const raw = await fs.readFile(resolved, "utf8");
+    private constructor(envPath?: string) {
+        this.filePath = path.resolve(
+            envPath ??
+                process.env.CONFIG_PATH ??
+                process.env.CONFIG_FILE ??
+                "config.json"
+        );
+    }
+
+    static getInstance(envPath?: string): ConfigManager {
+        if (!ConfigManager.instance) {
+            ConfigManager.instance = new ConfigManager(envPath);
+        }
+        return ConfigManager.instance;
+    }
+
+    async init(): Promise<void> {
+        await this.reload();
+
+        watch(this.filePath, async (eventType) => {
+            if (eventType !== "change") return;
+            try {
+                await this.reload();
+                console.log(`[config] Reloaded from ${this.filePath}`);
+            } catch (err) {
+                console.error(`[config] Failed to reload:`, err);
+            }
+        });
+    }
+
+    private async reload(): Promise<void> {
+        const raw = await fs.readFile(this.filePath, "utf8");
         const cfg = JSON.parse(raw) as Config;
 
         if (
@@ -23,11 +51,16 @@ export async function loadConfig(): Promise<{
             );
         }
 
-        return { config: cfg, configPath: resolved };
-    } catch (err) {
-        console.error(
-            `❌ No config found at "${resolved}". Please create one by copying "example-config.json" and filling in your credentials.`
-        );
-        throw err;
+        this._config = cfg;
+    }
+
+    get config(): Config {
+        return this._config;
+    }
+
+    get configPath(): string {
+        return this.filePath;
     }
 }
+
+export const configManager = ConfigManager.getInstance();

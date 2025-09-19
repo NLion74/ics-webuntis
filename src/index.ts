@@ -1,17 +1,16 @@
 import express from "express";
-import { loadConfig } from "./config";
+import { configManager } from "./config";
 import { fetchTimetable } from "./webuntis";
 import { lessonsToIcs } from "./ics";
-import { CacheEntry } from "./types";
-import { sessionCache, SESSION_TTL_MS } from "./webuntis";
 import { CacheHandler } from "./cacheHandler";
+import { User } from "./types";
 
 async function main() {
-    const { config, configPath } = await loadConfig();
-    console.log(`Loaded config from ${configPath}`);
+    await configManager.init();
+    console.log(`Loaded config from ${configManager.configPath}`);
 
     const app = express();
-    const icsCache = new CacheHandler(config.cacheDuration);
+    const icsCache = new CacheHandler(configManager.config.cacheDuration);
 
     function sendIcs(res: express.Response, filename: string, ics: string) {
         return res
@@ -25,8 +24,8 @@ async function main() {
 
     app.get("/timetable/:name", async (req, res) => {
         try {
-            const user = config.users.find(
-                (u) =>
+            const user = configManager.config.users.find(
+                (u: User) =>
                     u.friendlyName.toLowerCase() ===
                     req.params.name.toLowerCase()
             );
@@ -39,14 +38,16 @@ async function main() {
 
             const today = new Date();
             const startDate = new Date(today);
-            startDate.setDate(today.getDate() - config.daysBefore);
+            startDate.setDate(
+                today.getDate() - configManager.config.daysBefore
+            );
             const endDate = new Date(today);
-            endDate.setDate(today.getDate() + config.daysAfter);
+            endDate.setDate(today.getDate() + configManager.config.daysAfter);
 
             const lessons = await fetchTimetable(user, startDate, endDate);
             const ics = lessonsToIcs(
                 lessons,
-                config.timezone || "Europe/Berlin"
+                configManager.config.timezone || "Europe/Berlin"
             );
 
             return sendIcs(res, user.friendlyName, ics);
