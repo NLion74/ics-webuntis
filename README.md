@@ -11,6 +11,7 @@ It is designed for reliability, minimal resource usage, and straightforward depl
 -   Single-container deployment with Docker
 -   Strictly validated configuration
 -   Multiple Users supported
+-   Fetch timetables for specific classes, rooms, teachers, or subjects by name or numeric ID
 
 ## Quick Start
 
@@ -63,14 +64,27 @@ The service requires a JSON configuration file.
 
 ## Usage
 
-Once running, the service exposes an `.ics` feed:
+### Personal timetable
 
 ```
 http://<host>:7464/timetable/friendlyName.ics
-
 ```
 
-friendlyName represents the one specified in the user configuration. This link can be subscribed to any calendar client and just works out of the box.
+`<friendlyName>` is the one specified in the user configuration
+Returns the personal timetable as an .ics feed
+
+### Specific element timetable (class, room, teacher, subject)
+
+`<type>`: `"class"`, `"room"`, `"teacher"`, or `"subject"`
+`<id>` Either the numeric ID or the name of the element (the service will resolve the name automatically)
+
+Example URLs:
+
+`http://localhost:7464/timetable/jonte/class/12`
+`http://localhost:7464/timetable/jonte/room/24`
+`http://localhost:7464/timetable/jonte/teacher/MrSmith`
+
+If the ID cannot be resolved, the service will attempt to use it as a numeric ID.
 
 ## Contributing
 
