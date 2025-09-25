@@ -54,7 +54,7 @@ The service requires a JSON configuration file.
         "school": "myschool",
         "username": "student1",
         "password": "secret",
-        "baseurl": "https://mese.webuntis.com/WebUntis/",
+        "baseurl": "https://mese.webuntis.com/",
         "friendlyName": "student1"
         }
     ]
