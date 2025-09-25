@@ -80,9 +80,9 @@ Returns the personal timetable as an .ics feed
 
 Example URLs:
 
-`http://localhost:7464/timetable/jonte/class/12`
-`http://localhost:7464/timetable/jonte/room/24`
-`http://localhost:7464/timetable/jonte/teacher/MrSmith`
+`http://localhost:7464/timetable/user/class/10.3`
+`http://localhost:7464/timetable/user/room/24`
+`http://localhost:7464/timetable/user/teacher/MrSmith`
 
 If the ID cannot be resolved, the service will attempt to use it as a numeric ID.
 
