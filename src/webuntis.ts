@@ -19,7 +19,10 @@ async function getUntisSession(user: User): Promise<WebUntis> {
         return cached.untis;
     }
 
-    const baseUrl = user.baseurl.replace(/^https?:\/\//, "");
+    const baseUrl = user.baseurl
+        .replace(/^https?:\/\//, "")
+        .replace(/\/.*$/, "");
+
     const untis = new WebUntis(
         user.school,
         user.username,
