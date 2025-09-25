@@ -28,3 +28,11 @@ export interface CacheEntry {
     timestamp: number;
     ics: string;
 }
+
+export enum UntisElementType {
+    CLASS = 1,
+    TEACHER = 2,
+    SUBJECT = 3,
+    ROOM = 4,
+    STUDENT = 5,
+}

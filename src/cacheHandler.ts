@@ -1,8 +1,8 @@
 import { CacheEntry } from "./types";
 
 export class CacheHandler {
-    private cache = new Map<string, CacheEntry>();
-    private ttlMs: number;
+    private readonly cache = new Map<string, CacheEntry>();
+    private readonly ttlMs: number;
 
     constructor(ttlSeconds: number) {
         this.ttlMs = ttlSeconds * 1000;
