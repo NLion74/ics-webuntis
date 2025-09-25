@@ -1,5 +1,5 @@
 import { WebUntis } from "webuntis";
-import { Lesson, User } from "./types";
+import { Lesson, User, UntisElementType } from "./types";
 import { parseUntisDate } from "./utils";
 import { mergeLessons } from "./merge";
 
@@ -39,19 +39,93 @@ async function getUntisSession(user: User): Promise<WebUntis> {
 export async function fetchTimetable(
     user: User,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
+    type?: "class" | "room" | "teacher" | "subject",
+    id?: string | number
 ): Promise<Lesson[]> {
     const untis = await getUntisSession(user);
 
     try {
-        const rawTimetable = await untis.getOwnTimetableForRange(
-            startDate,
-            endDate
-        );
+        let numericId: number | undefined;
 
-        let lessons: Lesson[] = [];
+        if (type && id !== undefined) {
+            console.log(`Resolving ${type} name "${id}" to numeric ID`);
+            try {
+                const schoolyear = await untis.getCurrentSchoolyear();
+                switch (type) {
+                    case "class": {
+                        const classes = await untis.getClasses(
+                            true,
+                            schoolyear.id
+                        );
+                        numericId = classes.find(
+                            (c) => c.name === id || c.longName === id
+                        )?.id;
+                        break;
+                    }
+                    case "room": {
+                        const rooms = await untis.getRooms(true);
+                        numericId = rooms.find(
+                            (r) => r.name === id || r.longName === id
+                        )?.id;
+                        break;
+                    }
+                    case "teacher": {
+                        const teachers = await untis.getTeachers(true);
+                        numericId = teachers.find(
+                            (t) => t.name === id || t.longName === id
+                        )?.id;
+                        break;
+                    }
+                    case "subject": {
+                        const subjects = await untis.getSubjects(true);
+                        numericId = subjects.find(
+                            (s) => s.name === id || s.longName === id
+                        )?.id;
+                        break;
+                    }
+                }
+            } catch (err) {
+                console.warn(
+                    `Failed to resolve ${type} name "${id}" to numeric ID:`,
+                    err
+                );
+            }
 
-        lessons = rawTimetable
+            if (!numericId) {
+                const parsed = Number(id);
+                if (!isNaN(parsed)) numericId = parsed;
+                else
+                    throw new Error(
+                        `Could not resolve ${type} ID from "${id}"`
+                    );
+            }
+        }
+
+        let rawTimetable: any[];
+        if (!type || numericId === undefined) {
+            rawTimetable = await untis.getOwnTimetableForRange(
+                startDate,
+                endDate
+            );
+        } else {
+            const typeMap: Record<string, UntisElementType> = {
+                class: UntisElementType.CLASS,
+                teacher: UntisElementType.TEACHER,
+                subject: UntisElementType.SUBJECT,
+                room: UntisElementType.ROOM,
+            };
+
+            rawTimetable = await untis.getTimetableForRange(
+                startDate,
+                endDate,
+                numericId,
+                typeMap[type],
+                true
+            );
+        }
+
+        const lessons: Lesson[] = rawTimetable
             .filter((entry: any) => {
                 const subject = entry.su?.[0]?.longname?.toLowerCase() ?? "";
                 const teacher = entry.te?.[0]?.name?.toLowerCase() ?? "";
