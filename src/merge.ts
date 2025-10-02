@@ -2,12 +2,27 @@ import { Lesson } from "./types";
 
 const LESSON_MERGE_GAP = 1;
 
-export function mergeLessons(lessons: Lesson[]): Lesson[] {
+export function mergeLessons(
+    lessons: Lesson[],
+    schoolStartTime: number,
+    schoolEndTime: number
+): Lesson[] {
     if (!lessons.length) return [];
+
+    const clampedLessons = lessons
+        .map((lesson) => {
+            const startTime = Math.max(lesson.startTime, schoolStartTime);
+            const endTime = Math.min(lesson.endTime, schoolEndTime);
+
+            if (startTime >= endTime) return null;
+
+            return { ...lesson, startTime, endTime };
+        })
+        .filter(Boolean) as Lesson[];
 
     const groups = new Map<string, Lesson[]>();
 
-    for (const lesson of lessons) {
+    for (const lesson of clampedLessons) {
         const key = `${lesson.date.toDateString()}|${lesson.subject}|${
             lesson.teacher
         }|${lesson.room}|${lesson.class}`;

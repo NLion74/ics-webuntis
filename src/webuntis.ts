@@ -1,4 +1,4 @@
-import { WebUntis } from "webuntis";
+import { WebUntis, Timegrid } from "webuntis";
 import { Lesson, User, UntisElementType } from "./types";
 import { parseUntisDate } from "./utils";
 import { mergeLessons } from "./merge";
@@ -147,7 +147,30 @@ export async function fetchTimetable(
                 date: parseUntisDate(entry.date),
             }));
 
-        return mergeLessons(lessons);
+        const timegrids: Timegrid[] = await untis.getTimegrid();
+
+        const validTimegrids = timegrids.filter(
+            (tg) => tg.timeUnits.length > 0
+        );
+
+        if (validTimegrids.length === 0) {
+            return mergeLessons(lessons, 0, 0);
+        }
+
+        // Get lesson with earliest start time and latest end time
+        const schoolStartTime = Math.min(
+            ...validTimegrids.flatMap((tg) =>
+                tg.timeUnits.map((u) => u.startTime)
+            )
+        );
+
+        const schoolEndTime = Math.max(
+            ...validTimegrids.flatMap((tg) =>
+                tg.timeUnits.map((u) => u.endTime)
+            )
+        );
+
+        return mergeLessons(lessons, schoolStartTime, schoolEndTime);
     } catch (error) {
         await untis.logout();
         sessionCache.delete(user.username);
