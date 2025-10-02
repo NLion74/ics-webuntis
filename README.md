@@ -89,3 +89,24 @@ If the ID cannot be resolved, the service will attempt to use it as a numeric ID
 ## Contributing
 
 Feel free to contribute at any time! If so either create an issue to discuss your changes first or just open a Pull Request if you prefer.
+
+### Development Setup
+
+1. **Clone the repository:**
+
+```bash
+git clone https://github.com/NLion74/ics-webuntis
+cd ics-webuntis
+```
+
+2. **Install dependencies:**
+
+```
+npm install
+```
+
+1. **Run the project locally with hot reload:**
+
+```
+npm run dev
+```
