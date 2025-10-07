@@ -18,9 +18,9 @@ export interface Lesson {
     startTime: number;
     endTime: number;
     subject: string;
-    teacher: string;
+    teacher: string[];
     room: string;
-    class: string;
+    class: string[];
     date: Date;
 }
 
