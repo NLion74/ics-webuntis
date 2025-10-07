@@ -47,7 +47,8 @@ async function main() {
             const lessons = await fetchTimetable(user, startDate, endDate);
             const ics = lessonsToIcs(
                 lessons,
-                configManager.config.timezone || "Europe/Berlin"
+                configManager.config.timezone || "Europe/Berlin",
+                user.friendlyName
             );
 
             return sendIcs(res, user.friendlyName, ics);
@@ -102,7 +103,8 @@ async function main() {
 
             const ics = lessonsToIcs(
                 lessons,
-                configManager.config.timezone || "Europe/Berlin"
+                configManager.config.timezone || "Europe/Berlin",
+                `${user.friendlyName} - ${type || "own"} ${id || ""}`
             );
 
             icsCache.set(cacheKey, ics);

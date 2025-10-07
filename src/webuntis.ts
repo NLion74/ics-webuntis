@@ -138,12 +138,11 @@ export async function fetchTimetable(
                 startTime: entry.startTime,
                 endTime: entry.endTime,
                 subject: entry.su?.[0]?.name || "Event",
-                teacher: entry.te?.[0]?.name || "Unknown Teacher",
+                teacher: entry.te?.map((t: any) => t.name) || [
+                    "Unknown Teacher",
+                ],
                 room: entry.ro?.[0]?.name || "Unknown Room",
-                class:
-                    entry.kl?.[1]?.longname ||
-                    entry.kl?.[0]?.longname ||
-                    "Unknown Class",
+                class: entry.kl?.map((k: any) => k.name) || ["Unknown Class"],
                 date: parseUntisDate(entry.date),
             }));
 

@@ -1,7 +1,11 @@
 import ical, { ICalEventStatus } from "ical-generator";
 import { Lesson } from "./types";
 
-export function lessonsToIcs(lessons: Lesson[], timezone: string): string {
+export function lessonsToIcs(
+    lessons: Lesson[],
+    timezone: string,
+    requestedTimetable: string
+): string {
     const cal = ical({ name: "WebUntis Timetable", timezone });
 
     for (const l of lessons) {
@@ -9,6 +13,18 @@ export function lessonsToIcs(lessons: Lesson[], timezone: string): string {
         const startMinute = l.startTime % 100;
         const endHour = Math.floor(l.endTime / 100);
         const endMinute = l.endTime % 100;
+
+        const teacherCount = l.teacher.length;
+        const teacherList = l.teacher.slice(0, 3).join(", ");
+        const teacherSummary =
+            teacherCount > 3
+                ? `${teacherList} ...+${teacherCount - 3}`
+                : teacherList;
+
+        const classCount = l.class.length;
+        const classList = l.class.slice(0, 3).join(", ");
+        const classSummary =
+            classCount > 3 ? `${classList} ...+${classCount - 3}` : classList;
 
         cal.createEvent({
             start: new Date(
@@ -25,9 +41,14 @@ export function lessonsToIcs(lessons: Lesson[], timezone: string): string {
                 endHour,
                 endMinute
             ),
-            summary: `${l.subject} (${l.class})`,
-            description: `Teacher: ${l.teacher}\nRoom: ${l.room}`,
+            summary: `${l.subject} (${teacherSummary}) - ${classSummary}`,
             location: l.room,
+            description: `Subject: ${l.subject}\nTeacher: ${l.teacher.join(
+                ", "
+            )}\nRoom: ${l.room}\nClass: ${l.class.join(
+                ", "
+            )}\nTimetable: ${requestedTimetable}`,
+
             status: "CONFIRMED" as ICalEventStatus,
         });
     }
