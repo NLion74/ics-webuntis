@@ -5,17 +5,20 @@
     "scripts": {
         "build": "tsc -p tsconfig.json",
         "start": "node dist/index.js",
-        "dev": "ts-node src/index.ts"
+        "dev": "nodemon"
     },
     "dependencies": {
         "express": "^5.1.0",
+        "fnm": "0.0.0",
         "ical-generator": "^9.0.0",
+        "nvm": "0.0.4",
         "webuntis": "^2.2.1"
     },
     "devDependencies": {
         "@types/express": "^5.0.3",
         "@types/node": "24.3.3",
-        "ts-node": "^x.x.x",
+        "nodemon": "^3.1.10",
+        "ts-node": "^10.9.2",
         "typescript": "^x.x.x"
     }
 }

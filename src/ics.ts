@@ -26,6 +26,35 @@ export function lessonsToIcs(
         const classSummary =
             classCount > 3 ? `${classList} ...+${classCount - 3}` : classList;
 
+        const bkRemark = l.bkRemark;
+        const lstext = l.lstext;
+        const status = l.status;
+        const activityType = l.activityType;
+        let calSummary;
+        let calDescription;
+        if (activityType === 'Unterricht') {
+           calSummary = `${l.subject} (${teacherSummary}) - ${classSummary}`;
+           calDescription = `Subject: ${l.subject}\nTeacher: ${l.teacher.join(
+                ", "
+            )}\nRoom: ${l.room}\nClass: ${l.class.join(
+                ", "
+            )}\nTimetable: ${requestedTimetable}`
+        } else  {// if (activityType === 'Besprechnung') { <--- intended typo in (schoolspecific?) api reply :C --->
+           calSummary = `${lstext}`;
+           calDescription = `Attendees: ${l.teacher.join(
+                ", "
+            )}\nRoom: ${l.room}\nClass: ${l.class.join(
+                ", "
+            )}\nTimetable: ${requestedTimetable}`;
+        }
+        let calStatus = "CONFIRMED";
+        if (status === "cancelled"){
+            calStatus = "CANCELLED";
+        } else if (status === "irregular"){
+            calSummary = `~! ${calSummary}`;
+            calDescription = `Status: Substitution\n${calDescription}`;
+        }
+
         cal.createEvent({
             start: new Date(
                 l.date.getFullYear(),
@@ -41,15 +70,11 @@ export function lessonsToIcs(
                 endHour,
                 endMinute
             ),
-            summary: `${l.subject} (${teacherSummary}) - ${classSummary}`,
+            summary: calSummary,
             location: l.room,
-            description: `Subject: ${l.subject}\nTeacher: ${l.teacher.join(
-                ", "
-            )}\nRoom: ${l.room}\nClass: ${l.class.join(
-                ", "
-            )}\nTimetable: ${requestedTimetable}`,
+            description: calDescription,
 
-            status: "CONFIRMED" as ICalEventStatus,
+            status: calStatus as ICalEventStatus,
         });
     }
 
