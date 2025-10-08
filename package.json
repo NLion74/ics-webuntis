@@ -9,9 +9,7 @@
     },
     "dependencies": {
         "express": "^5.1.0",
-        "fnm": "0.0.0",
         "ical-generator": "^9.0.0",
-        "nvm": "0.0.4",
         "webuntis": "^2.2.1"
     },
     "devDependencies": {
