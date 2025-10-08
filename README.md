@@ -105,7 +105,7 @@ cd ics-webuntis
 npm install
 ```
 
-1. **Run the project locally with hot reload:**
+1. **Run the project locally:**
 
 ```
 npm run dev
