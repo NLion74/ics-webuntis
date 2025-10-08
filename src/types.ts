@@ -22,6 +22,10 @@ export interface Lesson {
     room: string;
     class: string[];
     date: Date;
+    bkRemark: string;
+    lstext: string;
+    status: string;
+    activityType: string;   
 }
 
 export interface CacheEntry {
