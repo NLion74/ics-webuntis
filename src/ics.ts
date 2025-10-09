@@ -32,21 +32,31 @@ export function lessonsToIcs(
         const activityType = l.activityType;
         let calSummary;
         let calDescription;
-        if (activityType === 'Unterricht') {
-           calSummary = `${l.subject} (${teacherSummary}) - ${classSummary}`;
-           calDescription = `Subject: ${l.subject}\nTeacher: ${l.teacher.join(
-                ", "
-            )}\nRoom: ${l.room}\nClass: ${l.class.join(
-                ", "
-            )}\nTimetable: ${requestedTimetable}`
-        } else  {// if (activityType === 'Besprechnung') { <--- intended typo in (schoolspecific?) api reply :C --->
-           calSummary = `${lstext}`;
-           calDescription = `Attendees: ${l.teacher.join(
-                ", "
-            )}\nRoom: ${l.room}\nClass: ${l.class.join(
-                ", "
-            )}\nTimetable: ${requestedTimetable}`;
+        switch (activityType.toLowerCase()) {
+            case "besprechung":
+            case "besprechnung":
+                calSummary = `${lstext}`;
+                calDescription = `Attendees: ${l.teacher.join(", ")}\nRoom: ${
+                    l.room
+                }\nClass: ${l.class.join(
+                    ", "
+                )}\nTimetable: ${requestedTimetable}`;
+                break;
+
+            case "unterricht":
+            default:
+                calSummary = `${l.subject} (${teacherSummary}) - ${classSummary}`;
+                calDescription = `Subject: ${
+                    l.subject
+                }\nTeacher: ${l.teacher.join(", ")}\nRoom: ${
+                    l.room
+                }\nClass: ${l.class.join(
+                    ", "
+                )}\nTimetable: ${requestedTimetable}`;
+                break;
         }
+}
+
         let calStatus = "CONFIRMED";
         if (status === "cancelled"){
             calStatus = "CANCELLED";
