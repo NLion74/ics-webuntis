@@ -50,9 +50,9 @@ export function lessonsToIcs(
         let calStatus = "CONFIRMED";
         if (status === "cancelled"){
             calStatus = "CANCELLED";
-            calDescription = `Status: Cancellation\n${calDescription}`;
-        } else if (status === "irregular"){
+        } else if (status === "irregular") {
             calDescription = `Status: Substitution\n${calDescription}`;
+            calStatus = "TENTATIVE";
         }
 
         cal.createEvent({
