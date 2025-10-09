@@ -124,7 +124,7 @@ export async function fetchTimetable(
                 true
             );
         } 
-           const lessons: Lesson[] = rawTimetable
+        const lessons: Lesson[] = rawTimetable
             .filter((entry: any) => {
                 // debug console.log(entry)
                 const subject = entry.su?.[0]?.longname?.toLowerCase() ?? "";
