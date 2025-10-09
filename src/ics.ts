@@ -52,7 +52,6 @@ export function lessonsToIcs(
             calStatus = "CANCELLED";
             calDescription = `Status: Cancellation\n${calDescription}`;
         } else if (status === "irregular"){
-            calSummary = `~! ${calSummary}`;
             calDescription = `Status: Substitution\n${calDescription}`;
         }
 
