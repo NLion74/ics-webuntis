@@ -26,44 +26,17 @@ export function lessonsToIcs(
         const classSummary =
             classCount > 3 ? `${classList} ...+${classCount - 3}` : classList;
 
-        const bkRemark = l.bkRemark;
-        const lstext = l.lstext;
-        const status = l.status;
-        const activityType = l.activityType;
+
         let calSummary;
         let calDescription;
-        switch (activityType.toLowerCase()) {
-            case "besprechung":
-            case "besprechnung":
-                calSummary = `${lstext}`;
-                calDescription = `Attendees: ${l.teacher.join(", ")}\nRoom: ${
-                    l.room
-                }\nClass: ${l.class.join(
-                    ", "
-                )}\nTimetable: ${requestedTimetable}`;
-                break;
 
-            case "unterricht":
-            default:
-                calSummary = `${l.subject} (${teacherSummary}) - ${classSummary}`;
-                calDescription = `Subject: ${
-                    l.subject
-                }\nTeacher: ${l.teacher.join(", ")}\nRoom: ${
-                    l.room
-                }\nClass: ${l.class.join(
-                    ", "
-                )}\nTimetable: ${requestedTimetable}`;
-                break;
-        }
-}
+        calSummary = `${l.subject === "Event" ? l.lstext : l.subject }${teacherSummary === "Unknown Teacher" ? "": ` (${teacherSummary})`}${classSummary === "Unknown Class" ? "": ` (${classSummary})`}`;
+        calDescription = `Subject: ${l.subject}\nTeacher: ${l.teacher.join(
+                ", "
+            )}\nRoom: ${l.room}\nClass: ${l.class.join(
+                ", "
+            )}\nTimetable: ${requestedTimetable}\nStatus: ${l.status}`;
 
-        let calStatus = "CONFIRMED";
-        if (status === "cancelled"){
-            calStatus = "CANCELLED";
-        } else if (status === "irregular") {
-            calDescription = `Status: Substitution\n${calDescription}`;
-            calStatus = "TENTATIVE";
-        }
 
         cal.createEvent({
             start: new Date(
@@ -84,7 +57,7 @@ export function lessonsToIcs(
             location: l.room,
             description: calDescription,
 
-            status: calStatus as ICalEventStatus,
+            status: "CONFIRMED" as ICalEventStatus,
         });
     }
 
