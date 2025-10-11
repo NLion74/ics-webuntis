@@ -26,6 +26,17 @@ export function lessonsToIcs(
         const classSummary =
             classCount > 3 ? `${classList} ...+${classCount - 3}` : classList;
 
+
+        const calSummary = `${l.subject} (${teacherSummary}) - ${classSummary}`;
+
+        const calDescription = `Subject: ${
+            l.subject
+        }\nTeacher: ${l.teacher.join(", ")}\nRoom: ${
+            l.room
+        }\nClass: ${l.class.join(
+            ", "
+        )}\nTimetable: ${requestedTimetable}\nStatus: ${l.status}`;```
+
         cal.createEvent({
             start: new Date(
                 l.date.getFullYear(),
@@ -41,13 +52,9 @@ export function lessonsToIcs(
                 endHour,
                 endMinute
             ),
-            summary: `${l.subject} (${teacherSummary}) - ${classSummary}`,
+            summary: calSummary,
             location: l.room,
-            description: `Subject: ${l.subject}\nTeacher: ${l.teacher.join(
-                ", "
-            )}\nRoom: ${l.room}\nClass: ${l.class.join(
-                ", "
-            )}\nTimetable: ${requestedTimetable}`,
+            description: calDescription,
 
             status: "CONFIRMED" as ICalEventStatus,
         });

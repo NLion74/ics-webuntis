@@ -7,3 +7,4 @@ node_modules
 *.tsbuildinfo
 .vscode
 npm-debug.log*
+config.json
