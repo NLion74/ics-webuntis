@@ -27,16 +27,15 @@ export function lessonsToIcs(
             classCount > 3 ? `${classList} ...+${classCount - 3}` : classList;
 
 
-        let calSummary;
-        let calDescription;
+        const calSummary = `${l.subject} (${teacherSummary}) - ${classSummary}`;
 
-        calSummary = `${l.subject === "Event" ? l.lstext : l.subject }${teacherSummary === "Unknown Teacher" ? "": ` (${teacherSummary})`}${classSummary === "Unknown Class" ? "": ` (${classSummary})`}`;
-        calDescription = `Subject: ${l.subject}\nTeacher: ${l.teacher.join(
-                ", "
-            )}\nRoom: ${l.room}\nClass: ${l.class.join(
-                ", "
-            )}\nTimetable: ${requestedTimetable}\nStatus: ${l.status}`;
-
+        const calDescription = `Subject: ${
+            l.subject
+        }\nTeacher: ${l.teacher.join(", ")}\nRoom: ${
+            l.room
+        }\nClass: ${l.class.join(
+            ", "
+        )}\nTimetable: ${requestedTimetable}\nStatus: ${l.status}`;```
 
         cal.createEvent({
             start: new Date(
