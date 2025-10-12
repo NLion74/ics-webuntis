@@ -27,8 +27,7 @@ export function lessonsToIcs(
             classCount > 3 ? `${classList} ...+${classCount - 3}` : classList;
 
 
-        const calSummary = `${l.subject} (${teacherSummary}) - ${classSummary}`;
-
+        const calSummary = `${l.subject === "Event" ? l.lstext : l.subject }${teacherSummary === "Unknown Teacher" ? "": ` (${teacherSummary})`}${classSummary === "Unknown Class" ? "": ` (${classSummary})`}`; 
         const calDescription = `Subject: ${
             l.subject
         }\nTeacher: ${l.teacher.join(", ")}\nRoom: ${
