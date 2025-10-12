@@ -35,7 +35,19 @@ export function lessonsToIcs(
             l.room
         }\nClass: ${l.class.join(
             ", "
-        )}\nTimetable: ${requestedTimetable}\nStatus: ${l.status}`;```
+        )}\nTimetable: ${requestedTimetable}\nStatus: ${l.status}`;
+
+        let calStatus;
+        switch (l.status) {
+            case "cancelled":
+                calStatus = "CANCELLED";
+                break;  
+            case "irregular":
+            case "confirmed":
+            default:
+                calStatus = "CONFIRMED";
+                break;    
+        }  
 
         cal.createEvent({
             start: new Date(
@@ -56,7 +68,7 @@ export function lessonsToIcs(
             location: l.room,
             description: calDescription,
 
-            status: "CONFIRMED" as ICalEventStatus,
+            status: calStatus as ICalEventStatus,
         });
     }
 
