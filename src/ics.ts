@@ -26,7 +26,7 @@ export function lessonsToIcs(
         const classSummary =
             classCount > 3 ? `${classList} ...+${classCount - 3}` : classList;
 
-
+        // hide or use alternative text for ics SUMMARY if subject,teacher or class is unknown
         const calSummary = `${l.subject === "Event" ? l.lstext : l.subject }${teacherSummary === "Unknown Teacher" ? "": ` (${teacherSummary})`}${classSummary === "Unknown Class" ? "": ` (${classSummary})`}`; 
         const calDescription = `Subject: ${
             l.subject
