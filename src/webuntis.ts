@@ -52,6 +52,8 @@ export async function fetchTimetable(
             console.log(`Resolving ${type} name "${id}" to numeric ID`);
             try {
                 const schoolyear = await untis.getCurrentSchoolyear();
+                const idStr = String(id).toLowerCase(); // ✅ normalize input
+
                 switch (type) {
                     case "class": {
                         const classes = await untis.getClasses(
@@ -59,28 +61,36 @@ export async function fetchTimetable(
                             schoolyear.id
                         );
                         numericId = classes.find(
-                            (c) => c.name === id || c.longName === id
+                            (c) =>
+                                c.name.toLowerCase() === idStr ||
+                                c.longName.toLowerCase() === idStr
                         )?.id;
                         break;
                     }
                     case "room": {
                         const rooms = await untis.getRooms(true);
                         numericId = rooms.find(
-                            (r) => r.name === id || r.longName === id
+                            (r) =>
+                                r.name.toLowerCase() === idStr ||
+                                r.longName.toLowerCase() === idStr
                         )?.id;
                         break;
                     }
                     case "teacher": {
                         const teachers = await untis.getTeachers(true);
                         numericId = teachers.find(
-                            (t) => t.name === id || t.longName === id
+                            (t) =>
+                                t.name.toLowerCase() === idStr ||
+                                t.longName.toLowerCase() === idStr
                         )?.id;
                         break;
                     }
                     case "subject": {
                         const subjects = await untis.getSubjects(true);
                         numericId = subjects.find(
-                            (s) => s.name === id || s.longName === id
+                            (s) =>
+                                s.name.toLowerCase() === idStr ||
+                                s.longName.toLowerCase() === idStr
                         )?.id;
                         break;
                     }
@@ -94,11 +104,17 @@ export async function fetchTimetable(
 
             if (!numericId) {
                 const parsed = Number(id);
-                if (!isNaN(parsed)) numericId = parsed;
-                else
-                    throw new Error(
-                        `Could not resolve ${type} ID from "${id}"`
+                if (!isNaN(parsed)) {
+                    numericId = parsed;
+                } else {
+                    // Throw a clearer, HTTP-friendly 404-style error
+                    throw Object.assign(
+                        new Error(
+                            `No ${type} found matching "${id}" (case-insensitive)`
+                        ),
+                        { code: 404 }
                     );
+                }
             }
         }
 
@@ -123,7 +139,12 @@ export async function fetchTimetable(
                 typeMap[type],
                 true
             );
-        } 
+        }
+
+        if (!rawTimetable || rawTimetable.length === 0) {
+            throw Object.assign(new Error("No timetable found"), { code: 404 });
+        }
+
         const lessons: Lesson[] = rawTimetable
             .filter((entry: any) => {
                 const subject = entry.su?.[0]?.longname?.toLowerCase() ?? "";
@@ -145,6 +166,10 @@ export async function fetchTimetable(
                 lstext: entry.lstext || "No Text",
                 status: entry.code || "confirmed",
             }));
+
+        if (lessons.length === 0) {
+            throw Object.assign(new Error("No timetable found"), { code: 404 });
+        }
 
         const timegrids: Timegrid[] = await untis.getTimegrid();
 
