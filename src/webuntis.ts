@@ -123,13 +123,11 @@ export async function fetchTimetable(
                 typeMap[type],
                 true
             );
-        }
-
+        } 
         const lessons: Lesson[] = rawTimetable
             .filter((entry: any) => {
                 const subject = entry.su?.[0]?.longname?.toLowerCase() ?? "";
                 const teacher = entry.te?.[0]?.name?.toLowerCase() ?? "";
-                if (entry.code === "cancelled") return false;
                 if (subject.startsWith("eva")) return false;
                 if (teacher.startsWith("eva")) return false;
                 return true;
@@ -144,6 +142,8 @@ export async function fetchTimetable(
                 room: entry.ro?.[0]?.name || "Unknown Room",
                 class: entry.kl?.map((k: any) => k.name) || ["Unknown Class"],
                 date: parseUntisDate(entry.date),
+                lstext: entry.lstext || "No Text",
+                status: entry.code || "confirmed",
             }));
 
         const timegrids: Timegrid[] = await untis.getTimegrid();
