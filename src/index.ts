@@ -109,7 +109,11 @@ async function main() {
 
             icsCache.set(cacheKey, ics);
 
-            return sendIcs(res, `${name}-${type || "own"}-${id || ""}`, ics);
+            return sendIcs(
+                res,
+                `${name}-${type || "own"}-${id?.toLocaleLowerCase() || ""}`,
+                ics
+            );
         } catch (err) {
             console.error(err);
             res.status(500).send("Error fetching timetable");
