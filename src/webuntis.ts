@@ -104,11 +104,17 @@ export async function fetchTimetable(
 
             if (!numericId) {
                 const parsed = Number(id);
-                if (!isNaN(parsed)) numericId = parsed;
-                else
-                    throw new Error(
-                        `Could not resolve ${type} ID from "${id}"`
+                if (!isNaN(parsed)) {
+                    numericId = parsed;
+                } else {
+                    // Throw a clearer, HTTP-friendly 404-style error
+                    throw Object.assign(
+                        new Error(
+                            `No ${type} found matching "${id}" (case-insensitive)`
+                        ),
+                        { code: 404 }
                     );
+                }
             }
         }
 
@@ -134,6 +140,11 @@ export async function fetchTimetable(
                 true
             );
         }
+
+        if (!rawTimetable || rawTimetable.length === 0) {
+            throw Object.assign(new Error("No timetable found"), { code: 404 });
+        }
+
         const lessons: Lesson[] = rawTimetable
             .filter((entry: any) => {
                 const subject = entry.su?.[0]?.longname?.toLowerCase() ?? "";
@@ -155,6 +166,10 @@ export async function fetchTimetable(
                 lstext: entry.lstext || "No Text",
                 status: entry.code || "confirmed",
             }));
+
+        if (lessons.length === 0) {
+            throw Object.assign(new Error("No timetable found"), { code: 404 });
+        }
 
         const timegrids: Timegrid[] = await untis.getTimegrid();
 

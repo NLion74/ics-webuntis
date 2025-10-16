@@ -31,6 +31,7 @@ async function main() {
             );
             if (!user) return res.status(404).send("User not found");
 
+            const cacheKey = user.username;
             const cacheEntry = icsCache.get(user.username);
             if (cacheEntry) {
                 return sendIcs(res, user.friendlyName, cacheEntry.ics);
@@ -45,14 +46,22 @@ async function main() {
             endDate.setDate(today.getDate() + configManager.config.daysAfter);
 
             const lessons = await fetchTimetable(user, startDate, endDate);
+            if (!lessons || lessons.length === 0) {
+                return res.status(404).send("No timetable found for this user");
+            }
             const ics = lessonsToIcs(
                 lessons,
                 configManager.config.timezone || "Europe/Berlin",
                 user.friendlyName
             );
 
+            icsCache.set(cacheKey, ics);
+
             return sendIcs(res, user.friendlyName, ics);
-        } catch (err) {
+        } catch (err: any) {
+            if (err.code === 404) {
+                return res.status(404).send(err.message);
+            }
             console.error(err);
             res.status(500).send("Error fetching timetable");
         }
@@ -60,7 +69,9 @@ async function main() {
 
     app.get("/timetable/:name/:type/:id", async (req, res) => {
         try {
-            const { name, type: rawType, id: rawId } = req.params;
+            const name = req.params.name?.trim().toLowerCase() || "";
+            const rawType = req.params.type?.trim().toLowerCase() || "";
+            const rawId = req.params.id?.trim().toLowerCase() || "";
 
             const user = configManager.config.users.find(
                 (u: User) => u.friendlyName.toLowerCase() === name.toLowerCase()
@@ -101,6 +112,12 @@ async function main() {
                 id?.toString()
             );
 
+            console.log(`Fetched ${lessons.length} lessons`);
+
+            if (!lessons || lessons.length === 0) {
+                return res.status(404).send("No timetable found for this user");
+            }
+
             const ics = lessonsToIcs(
                 lessons,
                 configManager.config.timezone || "Europe/Berlin",
@@ -114,7 +131,10 @@ async function main() {
                 `${name}-${type || "own"}-${id?.toLocaleLowerCase() || ""}`,
                 ics
             );
-        } catch (err) {
+        } catch (err: any) {
+            if (err.code === 404) {
+                return res.status(404).send(err.message);
+            }
             console.error(err);
             res.status(500).send("Error fetching timetable");
         }
