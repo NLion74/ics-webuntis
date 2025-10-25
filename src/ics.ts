@@ -26,27 +26,39 @@ export function lessonsToIcs(
         const classSummary =
             classCount > 3 ? `${classList} ...+${classCount - 3}` : classList;
 
-        // hide or use alternative text for ics SUMMARY if subject,teacher or class is unknown
-        const calSummary = `${l.subject === "Event" ? l.lstext : l.subject }${teacherSummary === "Unknown Teacher" ? "": ` (${teacherSummary})`}${classSummary === "Unknown Class" ? "": ` (${classSummary})`}`; 
+        // hide or use alternative text for ics SUMMARY if subject is unknown
+        const calSummary = [
+            l.subject === "Event" ? l.lstext : l.subject,
+            teacherSummary !== "Unknown Teacher" && `(${teacherSummary})`,
+            teacherSummary !== "Unknown Teacher" &&
+                classSummary !== "Unknown Class" &&
+                "-",
+            classSummary !== "Unknown Class" && `(${classSummary})`,
+        ]
+            .filter(Boolean)
+            .join(" ");
+
         const calDescription = `Subject: ${
             l.subject
         }\nTeacher: ${l.teacher.join(", ")}\nRoom: ${
             l.room
         }\nClass: ${l.class.join(
             ", "
-        )}\nTimetable: ${requestedTimetable}\nStatus: ${l.status}`;
+        )}\nTimetable: ${requestedTimetable}\nStatus: ${l.status}\nlstext: ${
+            l.lstext
+        }`;
 
         let calStatus;
         switch (l.status) {
             case "cancelled":
                 calStatus = "CANCELLED";
-                break;  
+                break;
             case "irregular":
             case "confirmed":
             default:
                 calStatus = "CONFIRMED";
-                break;    
-        }  
+                break;
+        }
 
         cal.createEvent({
             start: new Date(

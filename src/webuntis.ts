@@ -52,7 +52,7 @@ export async function fetchTimetable(
             console.log(`Resolving ${type} name "${id}" to numeric ID`);
             try {
                 const schoolyear = await untis.getCurrentSchoolyear();
-                const idStr = String(id).toLowerCase(); // ✅ normalize input
+                const idStr = String(id).toLowerCase();
 
                 switch (type) {
                     case "class": {
@@ -107,7 +107,6 @@ export async function fetchTimetable(
                 if (!isNaN(parsed)) {
                     numericId = parsed;
                 } else {
-                    // Throw a clearer, HTTP-friendly 404-style error
                     throw Object.assign(
                         new Error(
                             `No ${type} found matching "${id}" (case-insensitive)`
