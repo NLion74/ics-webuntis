@@ -11,13 +11,6 @@ async function main() {
     await configManager.init();
     console.log(`Loaded config from ${configManager.configPath}`);
 
-    // Debug: Check if i18n resources are properly loaded
-    console.log('[DEBUG] i18n initialization:');
-    console.log(`  - Supported languages: ${i18next.languages}`);
-    console.log(`  - Current language: ${i18next.language}`);
-    console.log(`  - EN resources: ${JSON.stringify(Object.keys(i18next.getResourceBundle('en', 'translation') || {}))}`);
-    console.log(`  - DE resources: ${JSON.stringify(Object.keys(i18next.getResourceBundle('de', 'translation') || {}))}`);
-
     const app = express();
     // Add i18next middleware
     app.use(i18nextMiddleware.handle(i18next));
