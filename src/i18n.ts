@@ -7,6 +7,7 @@ i18next
     .use(Backend)
     .use(middleware.LanguageDetector)
     .init({
+        showSupportNotice: false,
         fallbackLng: 'en',
         supportedLngs: ['en', 'de'], // Add more languages as needed
         preload: ['en', 'de'],
