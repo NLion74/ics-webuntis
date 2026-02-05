@@ -1,5 +1,3 @@
-version: "3.3"
-
 services:
     webuntis-timetable:
         image: nlion/ics-webuntis:latest

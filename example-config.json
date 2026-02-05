@@ -10,7 +10,7 @@
             "baseurl": "",
             "friendlyName": "",
             "language": "en",
-            "cancelledDisplay": "show"
+            "cancelledDisplay": "mark"
         }
     ]
 }
