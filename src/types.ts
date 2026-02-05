@@ -4,6 +4,7 @@ export interface User {
     password: string;
     baseurl: string;
     friendlyName: string;
+    language?: string; // Optional language setting (e.g., 'en', 'de')
 }
 
 export interface Config {

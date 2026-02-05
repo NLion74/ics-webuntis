@@ -1,18 +1,23 @@
 import ical, { ICalEventStatus } from "ical-generator";
 import { Lesson } from "./types";
+import { TFunction } from 'i18next';
 
 export function lessonsToIcs(
     lessons: Lesson[],
     timezone: string,
-    requestedTimetable: string
+    requestedTimetable: string,
+    t: TFunction // Add translation function parameter
 ): string {
-    const cal = ical({ name: "WebUntis Timetable", timezone });
+    const cal = ical({ name: t('calendar.name'), timezone });
 
     for (const l of lessons) {
         const startHour = Math.floor(l.startTime / 100);
         const startMinute = l.startTime % 100;
         const endHour = Math.floor(l.endTime / 100);
         const endMinute = l.endTime % 100;
+
+        const unknownTeacher = t('calendar.unknown_teacher');
+        const unknownClass = t('calendar.unknown_class');
 
         const teacherCount = l.teacher.length;
         const teacherList = l.teacher.slice(0, 3).join(", ");
@@ -28,23 +33,24 @@ export function lessonsToIcs(
 
         // hide or use alternative text for ics SUMMARY if subject is unknown
         const calSummary = [
+            l.status === "cancelled" ? `⛔ [${t('calendar.cancelled')}]` : "",
             l.subject === "Event" ? l.lstext : l.subject,
-            teacherSummary !== "Unknown Teacher" && `(${teacherSummary})`,
-            teacherSummary !== "Unknown Teacher" &&
-                classSummary !== "Unknown Class" &&
+            teacherSummary !== unknownTeacher && `(${teacherSummary})`,
+            teacherSummary !== unknownTeacher &&
+                classSummary !== unknownClass &&
                 "-",
-            classSummary !== "Unknown Class" && `(${classSummary})`,
+            classSummary !== unknownClass && `(${classSummary})`,
         ]
             .filter(Boolean)
             .join(" ");
 
-        const calDescription = `Subject: ${
+        const calDescription = `${t('calendar.subject')}: ${
             l.subject
-        }\nTeacher: ${l.teacher.join(", ")}\nRoom: ${
+        }\n${t('calendar.teacher')}: ${l.teacher.join(", ")}\n${t('calendar.room')}: ${
             l.room
-        }\nClass: ${l.class.join(
+        }\n${t('calendar.class')}: ${l.class.join(
             ", "
-        )}\nTimetable: ${requestedTimetable}\nStatus: ${l.status}\nlstext: ${
+        )}\n${t('calendar.timetable')}: ${requestedTimetable}\n${t('calendar.status')}: ${l.status}\nlstext: ${
             l.lstext
         }`;
 

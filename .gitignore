@@ -8,3 +8,4 @@ node_modules
 .vscode
 npm-debug.log*
 config.json
+mise.toml

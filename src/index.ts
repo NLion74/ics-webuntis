@@ -1,4 +1,6 @@
 import express from "express";
+import i18nextMiddleware from 'i18next-http-middleware';
+import i18next from './i18n';
 import { configManager } from "./config";
 import { fetchTimetable } from "./webuntis";
 import { lessonsToIcs } from "./ics";
@@ -10,6 +12,9 @@ async function main() {
     console.log(`Loaded config from ${configManager.configPath}`);
 
     const app = express();
+    // Add i18next middleware
+    app.use(i18nextMiddleware.handle(i18next));
+    
     const icsCache = new CacheHandler(configManager.config.cacheDuration);
 
     function sendIcs(res: express.Response, filename: string, ics: string) {
@@ -29,10 +34,15 @@ async function main() {
                     u.friendlyName.toLowerCase() ===
                     req.params.name.toLowerCase()
             );
-            if (!user) return res.status(404).send("User not found");
+            if (!user) return res.status(404).send(req.t('errors.user_not_found'));
 
-            const cacheKey = user.username;
-            const cacheEntry = icsCache.get(user.username);
+            // Set user's language if configured, but allow query parameter override
+            if (user.language && !req.query.lang) {
+                await req.i18n.changeLanguage(user.language);
+            }
+
+            const cacheKey = `${user.username}:${req.i18n.language}`;
+            const cacheEntry = icsCache.get(cacheKey);
             if (cacheEntry) {
                 return sendIcs(res, user.friendlyName, cacheEntry.ics);
             }
@@ -47,12 +57,13 @@ async function main() {
 
             const lessons = await fetchTimetable(user, startDate, endDate);
             if (!lessons || lessons.length === 0) {
-                return res.status(404).send("No timetable found for this user");
+                return res.status(404).send(req.t('errors.no_timetable'));
             }
             const ics = lessonsToIcs(
                 lessons,
                 configManager.config.timezone || "Europe/Berlin",
-                user.friendlyName
+                user.friendlyName,
+                req.t
             );
 
             icsCache.set(cacheKey, ics);
@@ -63,7 +74,7 @@ async function main() {
                 return res.status(404).send(err.message);
             }
             console.error(err);
-            res.status(500).send("Error fetching timetable");
+            res.status(500).send(req.t('errors.fetch_error'));
         }
     });
 
@@ -76,7 +87,12 @@ async function main() {
             const user = configManager.config.users.find(
                 (u: User) => u.friendlyName.toLowerCase() === name.toLowerCase()
             );
-            if (!user) return res.status(404).send("User not found");
+            if (!user) return res.status(404).send(req.t('errors.user_not_found'));
+
+            // Set user's language if configured, but allow query parameter override
+            if (user.language && !req.query.lang) {
+                await req.i18n.changeLanguage(user.language);
+            }
 
             const type = ["class", "room", "teacher", "subject"].includes(
                 rawType || ""
@@ -86,7 +102,7 @@ async function main() {
 
             const id = rawId ? String(rawId) : undefined;
 
-            const cacheKey = `${user.username}:${type || "own"}:${id || ""}`;
+            const cacheKey = `${user.username}:${type || "own"}:${id || ""}:${req.i18n.language}`;
             const cacheEntry = icsCache.get(cacheKey);
             if (cacheEntry) {
                 return sendIcs(res, `${name}-${type || "own"}`, cacheEntry.ics);
@@ -115,13 +131,14 @@ async function main() {
             console.log(`Fetched ${lessons.length} lessons`);
 
             if (!lessons || lessons.length === 0) {
-                return res.status(404).send("No timetable found for this user");
+                return res.status(404).send(req.t('errors.no_timetable'));
             }
 
             const ics = lessonsToIcs(
                 lessons,
                 configManager.config.timezone || "Europe/Berlin",
-                `${user.friendlyName} - ${type || "own"} ${id || ""}`
+                `${user.friendlyName} - ${type || "own"} ${id || ""}`,
+                req.t
             );
 
             icsCache.set(cacheKey, ics);
@@ -136,7 +153,7 @@ async function main() {
                 return res.status(404).send(err.message);
             }
             console.error(err);
-            res.status(500).send("Error fetching timetable");
+            res.status(500).send(req.t('errors.fetch_error'));
         }
     });
 

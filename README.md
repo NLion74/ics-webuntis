@@ -12,6 +12,7 @@ It is designed for reliability, minimal resource usage, and straightforward depl
 -   Strictly validated configuration
 -   Multiple Users supported
 -   Fetch timetables for specific classes, rooms, teachers, or subjects by name or numeric ID
+- Multiple language support with automatic detection and user-specific language settings (currently supports English and German)
 
 ## Quick Start
 
@@ -45,18 +46,19 @@ This will fail without a 'config.json'
 The service requires a JSON configuration file.
 `config.json` example
 
-```
+```json
 {
     "daysBefore": 7,
     "daysAfter": 14,
     "cacheDuration": 300,
     "users": [
         {
-        "school": "myschool",
-        "username": "student1",
-        "password": "secret",
-        "baseurl": "https://mese.webuntis.com/",
-        "friendlyName": "student1"
+            "school": "myschool",
+            "username": "student1",
+            "password": "secret",
+            "baseurl": "https://mese.webuntis.com/",
+            "friendlyName": "student1",
+            "language": "en"
         }
     ]
 }
@@ -80,11 +82,20 @@ Returns the personal timetable as an .ics feed
 
 Example URLs:
 
-`http://localhost:7464/timetable/user/class/10.3`
-`http://localhost:7464/timetable/user/room/24`
-`http://localhost:7464/timetable/user/teacher/MrSmith`
+`http://localhost:7464/timetable/student1/class/10.3`
+`http://localhost:7464/timetable/student1/room/24`
+`http://localhost:7464/timetable/student1/teacher/MrSmith?lang=de`
 
+Replace `student1` with the friendly name of your user, and `class/10.3` with the desired type and ID.
 If the ID cannot be resolved, the service will attempt to use it as a numeric ID.
+
+### Different languages
+
+The service supports multiple languages and will attempt to detect the preferred language for each request. The detection order is as follows:
+
+1. Query parameter `lang` (e.g., `?lang=en`)
+2. User-specific language setting from the configuration file
+3. `Accepted-Language` header from the request (your browser or calendar client should set this automatically based on your system settings)
 
 ## Contributing
 

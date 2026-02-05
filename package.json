@@ -9,11 +9,15 @@
     },
     "dependencies": {
         "express": "^5.1.0",
+        "i18next": "^25.8.4",
+        "i18next-fs-backend": "^2.6.1",
+        "i18next-http-middleware": "^3.9.2",
         "ical-generator": "^9.0.0",
         "webuntis": "^2.2.1"
     },
     "devDependencies": {
         "@types/express": "^5.0.3",
+        "@types/i18next-fs-backend": "^1.1.5",
         "@types/node": "24.8.0",
         "nodemon": "^3.1.10",
         "ts-node": "^10.9.2",
