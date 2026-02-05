@@ -11,6 +11,13 @@ async function main() {
     await configManager.init();
     console.log(`Loaded config from ${configManager.configPath}`);
 
+    // Debug: Check if i18n resources are properly loaded
+    console.log('[DEBUG] i18n initialization:');
+    console.log(`  - Supported languages: ${i18next.languages}`);
+    console.log(`  - Current language: ${i18next.language}`);
+    console.log(`  - EN resources: ${JSON.stringify(Object.keys(i18next.getResourceBundle('en', 'translation') || {}))}`);
+    console.log(`  - DE resources: ${JSON.stringify(Object.keys(i18next.getResourceBundle('de', 'translation') || {}))}`);
+
     const app = express();
     // Add i18next middleware
     app.use(i18nextMiddleware.handle(i18next));
@@ -34,12 +41,13 @@ async function main() {
                     u.friendlyName.toLowerCase() ===
                     req.params.name.toLowerCase()
             );
-            if (!user) return res.status(404).send(req.t('errors.user_not_found'));
-
+            
             // Set user's language if configured, but allow query parameter override
-            if (user.language && !req.query.lang) {
+            if (user?.language && !req.query.lang) {
                 await req.i18n.changeLanguage(user.language);
             }
+
+            if (!user) return res.status(404).send(req.t('errors.user_not_found'));
 
             const cacheKey = `${user.username}:${req.i18n.language}`;
             const cacheEntry = icsCache.get(cacheKey);
@@ -87,12 +95,13 @@ async function main() {
             const user = configManager.config.users.find(
                 (u: User) => u.friendlyName.toLowerCase() === name.toLowerCase()
             );
-            if (!user) return res.status(404).send(req.t('errors.user_not_found'));
-
+            
             // Set user's language if configured, but allow query parameter override
-            if (user.language && !req.query.lang) {
+            if (user?.language && !req.query.lang) {
                 await req.i18n.changeLanguage(user.language);
             }
+
+            if (!user) return res.status(404).send(req.t('errors.user_not_found'));
 
             const type = ["class", "room", "teacher", "subject"].includes(
                 rawType || ""

@@ -23,6 +23,9 @@ RUN npm ci --omit=dev
 # Copy built output
 COPY --from=builder /app/dist ./dist
 
+# Copy language files
+COPY --from=builder /app/locales ./locales
+
 USER node
 
 ENV NODE_ENV=production
