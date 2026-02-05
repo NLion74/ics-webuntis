@@ -4,7 +4,8 @@ export interface User {
     password: string;
     baseurl: string;
     friendlyName: string;
-    language?: string; // Optional language setting (e.g., 'en', 'de')
+    language?: "en" | "de";
+    cancelledDisplay?: "hide" | "mark" | "show";
 }
 
 export interface Config {

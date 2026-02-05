@@ -42,7 +42,8 @@ async function main() {
 
             if (!user) return res.status(404).send(req.t('errors.user_not_found'));
 
-            const cacheKey = `${user.username}:${req.i18n.language}`;
+            const cancelledDisplay = (req.query.cancelledDisplay as User['cancelledDisplay']) || user.cancelledDisplay || "mark";
+            const cacheKey = `${user.username}:${req.i18n.language}:${cancelledDisplay}`;
             const cacheEntry = icsCache.get(cacheKey);
             if (cacheEntry) {
                 return sendIcs(res, user.friendlyName, cacheEntry.ics);
@@ -64,7 +65,8 @@ async function main() {
                 lessons,
                 configManager.config.timezone || "Europe/Berlin",
                 user.friendlyName,
-                req.t
+                req.t,
+                cancelledDisplay
             );
 
             icsCache.set(cacheKey, ics);
@@ -104,7 +106,8 @@ async function main() {
 
             const id = rawId ? String(rawId) : undefined;
 
-            const cacheKey = `${user.username}:${type || "own"}:${id || ""}:${req.i18n.language}`;
+            const cancelledDisplay = (req.query.cancelledDisplay as User['cancelledDisplay']) || user.cancelledDisplay || "mark";
+            const cacheKey = `${user.username}:${type || "own"}:${id || ""}:${req.i18n.language}:${cancelledDisplay}`;
             const cacheEntry = icsCache.get(cacheKey);
             if (cacheEntry) {
                 return sendIcs(res, `${name}-${type || "own"}`, cacheEntry.ics);
@@ -140,7 +143,8 @@ async function main() {
                 lessons,
                 configManager.config.timezone || "Europe/Berlin",
                 `${user.friendlyName} - ${type || "own"} ${id || ""}`,
-                req.t
+                req.t,
+                cancelledDisplay
             );
 
             icsCache.set(cacheKey, ics);
