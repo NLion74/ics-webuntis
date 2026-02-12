@@ -37,7 +37,7 @@ export function lessonsToIcs(
 
         // hide or use alternative text for ics SUMMARY if subject is unknown
         const calSummary = [
-            cancelledDisplay === "show" && l.status === "cancelled" ? "" : l.status === "cancelled" ? `⛔ [${t('calendar.cancelled')}]` : "",
+            cancelledDisplay === "show" && l.status === "cancelled" ? "" : l.status === "cancelled" ? `[${t('calendar.cancelled')}]` : "",
             l.subject === "Event" ? l.lstext : l.subject,
             teacherSummary !== unknownTeacher && `(${teacherSummary})`,
             teacherSummary !== unknownTeacher &&
