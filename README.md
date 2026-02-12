@@ -75,7 +75,7 @@ The service requires a JSON configuration file.
 | `users[].baseurl` | string | - | Yes | The base URL of your WebUntis instance (e.g., `https://mese.webuntis.com/`). |
 | `users[].friendlyName` | string | - | Yes | A unique local identifier for this user, used in the `.ics` URL. |
 | `users[].language` | string | `en` | No | Preferred language for the user (supported values: `en`, `de`). |
-| `users[].cancelledDisplay` | string | `remove` | No | How to handle cancelled lessons. Options: `hide` (exclude them entirely), `mark` (include them but marked as CANCELLED), `show` (include them and clients decide on how to handle the ICS `STATUS` property). |
+| `users[].cancelledDisplay` | string | `show` | No | How to handle cancelled lessons. Options: `hide` (exclude them entirely), `mark` (include them but marked as CANCELLED), `show` (include them and clients decide on how to handle the ICS `STATUS` property). |
 
 
 ## Usage
