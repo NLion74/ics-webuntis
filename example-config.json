@@ -8,7 +8,9 @@
             "username": "",
             "password": "",
             "baseurl": "",
-            "friendlyName": ""
+            "friendlyName": "",
+            "language": "en",
+            "cancelledDisplay": "mark"
         }
     ]
 }
