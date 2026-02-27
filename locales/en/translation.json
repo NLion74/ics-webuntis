@@ -1,20 +1,21 @@
 {
-  "errors": {
-    "user_not_found": "User not found",
-    "no_timetable": "No timetable found for this user",
-    "fetch_error": "Error fetching timetable",
-    "invalid_type": "No {{type}} found matching \"{{id}}\" (case-insensitive)"
-  },
-  "calendar": {
-    "name": "WebUntis Timetable",
-    "subject": "Subject",
-    "teacher": "Teacher",
-    "room": "Room",
-    "class": "Class",
-    "timetable": "Timetable",
-    "status": "Status",
-    "unknown_teacher": "Unknown Teacher",
-    "unknown_class": "Unknown Class",
-    "cancelled": "Cancelled"
-  }
+    "errors": {
+        "user_not_found": "User not found",
+        "no_timetable": "No timetable found for this user",
+        "fetch_error": "Error fetching timetable",
+        "invalid_type": "No {{type}} found matching \"{{id}}\" (case-insensitive)",
+        "invalid_access_token": "Invalid or missing access token"
+    },
+    "calendar": {
+        "name": "WebUntis Timetable",
+        "subject": "Subject",
+        "teacher": "Teacher",
+        "room": "Room",
+        "class": "Class",
+        "timetable": "Timetable",
+        "status": "Status",
+        "unknown_teacher": "Unknown Teacher",
+        "unknown_class": "Unknown Class",
+        "cancelled": "Cancelled"
+    }
 }

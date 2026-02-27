@@ -10,7 +10,8 @@
             "baseurl": "",
             "friendlyName": "",
             "language": "en",
-            "cancelledDisplay": "mark"
+            "cancelledDisplay": "mark",
+            "accessToken": ""
         }
     ]
 }

@@ -27,7 +27,7 @@ async function getUntisSession(user: User): Promise<WebUntis> {
         user.school,
         user.username,
         user.password,
-        baseUrl
+        baseUrl,
     );
 
     await untis.login();
@@ -41,7 +41,7 @@ export async function fetchTimetable(
     startDate: Date,
     endDate: Date,
     type?: "class" | "room" | "teacher" | "subject",
-    id?: string | number
+    id?: string | number,
 ): Promise<Lesson[]> {
     const untis = await getUntisSession(user);
 
@@ -58,12 +58,12 @@ export async function fetchTimetable(
                     case "class": {
                         const classes = await untis.getClasses(
                             true,
-                            schoolyear.id
+                            schoolyear.id,
                         );
                         numericId = classes.find(
                             (c) =>
                                 c.name.toLowerCase() === idStr ||
-                                c.longName.toLowerCase() === idStr
+                                c.longName.toLowerCase() === idStr,
                         )?.id;
                         break;
                     }
@@ -72,7 +72,7 @@ export async function fetchTimetable(
                         numericId = rooms.find(
                             (r) =>
                                 r.name.toLowerCase() === idStr ||
-                                r.longName.toLowerCase() === idStr
+                                r.longName.toLowerCase() === idStr,
                         )?.id;
                         break;
                     }
@@ -81,7 +81,7 @@ export async function fetchTimetable(
                         numericId = teachers.find(
                             (t) =>
                                 t.name.toLowerCase() === idStr ||
-                                t.longName.toLowerCase() === idStr
+                                t.longName.toLowerCase() === idStr,
                         )?.id;
                         break;
                     }
@@ -90,7 +90,7 @@ export async function fetchTimetable(
                         numericId = subjects.find(
                             (s) =>
                                 s.name.toLowerCase() === idStr ||
-                                s.longName.toLowerCase() === idStr
+                                s.longName.toLowerCase() === idStr,
                         )?.id;
                         break;
                     }
@@ -98,7 +98,7 @@ export async function fetchTimetable(
             } catch (err) {
                 console.warn(
                     `Failed to resolve ${type} name "${id}" to numeric ID:`,
-                    err
+                    err,
                 );
             }
 
@@ -109,9 +109,9 @@ export async function fetchTimetable(
                 } else {
                     throw Object.assign(
                         new Error(
-                            `No ${type} found matching "${id}" (case-insensitive)`
+                            `No ${type} found matching "${id}" (case-insensitive)`,
                         ),
-                        { code: 404 }
+                        { code: 404 },
                     );
                 }
             }
@@ -121,7 +121,7 @@ export async function fetchTimetable(
         if (!type || numericId === undefined) {
             rawTimetable = await untis.getOwnTimetableForRange(
                 startDate,
-                endDate
+                endDate,
             );
         } else {
             const typeMap: Record<string, UntisElementType> = {
@@ -136,7 +136,7 @@ export async function fetchTimetable(
                 endDate,
                 numericId,
                 typeMap[type],
-                true
+                true,
             );
         }
 
@@ -173,7 +173,7 @@ export async function fetchTimetable(
         const timegrids: Timegrid[] = await untis.getTimegrid();
 
         const validTimegrids = timegrids.filter(
-            (tg) => tg.timeUnits.length > 0
+            (tg) => tg.timeUnits.length > 0,
         );
 
         if (validTimegrids.length === 0) {
@@ -183,14 +183,14 @@ export async function fetchTimetable(
         // Get lesson with earliest start time and latest end time
         const schoolStartTime = Math.min(
             ...validTimegrids.flatMap((tg) =>
-                tg.timeUnits.map((u) => u.startTime)
-            )
+                tg.timeUnits.map((u) => u.startTime),
+            ),
         );
 
         const schoolEndTime = Math.max(
             ...validTimegrids.flatMap((tg) =>
-                tg.timeUnits.map((u) => u.endTime)
-            )
+                tg.timeUnits.map((u) => u.endTime),
+            ),
         );
 
         return mergeLessons(lessons, schoolStartTime, schoolEndTime);

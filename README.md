@@ -5,15 +5,16 @@ It is designed for reliability, minimal resource usage, and straightforward depl
 
 ## Features
 
--   Fetch timetables directly from WebUntis
--   Expose an `.ics` calendar endpoint for integration with any calendar client
--   Built-in caching to reduce load on WebUntis
--   Single-container deployment with Docker
--   Strictly validated configuration
--   Multiple Users supported
--   Fetch timetables for specific classes, rooms, teachers, or subjects by name or numeric ID
--   Multiple language support with automatic detection and user-specific language settings (currently supports English and German)
--   Configurable handling of cancelled lessons
+- Fetch timetables directly from WebUntis
+- Expose an `.ics` calendar endpoint for integration with any calendar client
+- Built-in caching to reduce load on WebUntis
+- Single-container deployment with Docker
+- Strictly validated configuration
+- Multiple Users supported
+- Fetch timetables for specific classes, rooms, teachers, or subjects by name or numeric ID
+- Multiple language support with automatic detection and user-specific language settings (currently supports English and German)
+- Configurable handling of cancelled lessons
+- Optional per-user access token protection
 
 ## Quick Start
 
@@ -57,26 +58,27 @@ The service requires a JSON configuration file.
             "baseurl": "https://mese.webuntis.com/",
             "friendlyName": "student1",
             "language": "en",
-            "cancelledDisplay": "mark"
+            "cancelledDisplay": "mark",
+            "accessToken": "my-secret-token"
         }
     ]
 }
 ```
 
-| Option | Type | Default | Required | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `daysBefore` | integer | `7` | No | Number of days in the past to fetch timetable entries for. |
-| `daysAfter` | integer | `14` | No | Number of days in the future to fetch timetable entries for. |
-| `cacheDuration` | integer | `300` | No | Cache duration in seconds (5 minutes by default). Prevents excessive requests to WebUntis. |
-| `users` | array | `[]` | Yes | List of user objects for connecting to WebUntis. |
-| `users[].school` | string | - | Yes | The school name as used in WebUntis. |
-| `users[].username` | string | - | Yes | The user account name. |
-| `users[].password` | string | - | Yes | The user account password. |
-| `users[].baseurl` | string | - | Yes | The base URL of your WebUntis instance (e.g., `https://mese.webuntis.com/`). |
-| `users[].friendlyName` | string | - | Yes | A unique local identifier for this user, used in the `.ics` URL. |
-| `users[].language` | string | `en` | No | Preferred language for the user (supported values: `en`, `de`). |
-| `users[].cancelledDisplay` | string | `show` | No | How to handle cancelled lessons. Options: `hide` (exclude them entirely), `mark` (include them but marked as CANCELLED), `show` (include them and clients decide on how to handle the ICS `STATUS` property). |
-
+| Option                     | Type    | Default | Required | Description                                                                                                                                                                                                   |
+| :------------------------- | :------ | :------ | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `daysBefore`               | integer | `7`     | No       | Number of days in the past to fetch timetable entries for.                                                                                                                                                    |
+| `daysAfter`                | integer | `14`    | No       | Number of days in the future to fetch timetable entries for.                                                                                                                                                  |
+| `cacheDuration`            | integer | `300`   | No       | Cache duration in seconds (5 minutes by default). Prevents excessive requests to WebUntis.                                                                                                                    |
+| `users`                    | array   | `[]`    | Yes      | List of user objects for connecting to WebUntis.                                                                                                                                                              |
+| `users[].school`           | string  | -       | Yes      | The school name as used in WebUntis.                                                                                                                                                                          |
+| `users[].username`         | string  | -       | Yes      | The user account name.                                                                                                                                                                                        |
+| `users[].password`         | string  | -       | Yes      | The user account password.                                                                                                                                                                                    |
+| `users[].baseurl`          | string  | -       | Yes      | The base URL of your WebUntis instance (e.g., `https://mese.webuntis.com/`).                                                                                                                                  |
+| `users[].friendlyName`     | string  | -       | Yes      | A unique local identifier for this user, used in the `.ics` URL.                                                                                                                                              |
+| `users[].language`         | string  | `en`    | No       | Preferred language for the user (supported values: `en`, `de`).                                                                                                                                               |
+| `users[].cancelledDisplay` | string  | `show`  | No       | How to handle cancelled lessons. Options: `hide` (exclude them entirely), `mark` (include them but marked as CANCELLED), `show` (include them and clients decide on how to handle the ICS `STATUS` property). |
+| `users[].accessToken`      | string  | -       | No       | Optional access token(s) required to access this user's timetable.                                                                                                                                            |
 
 ## Usage
 
@@ -88,6 +90,12 @@ http://<host>:7464/timetable/friendlyName.ics
 
 `<friendlyName>` is the one specified in the user configuration
 Returns the personal timetable as an .ics feed
+
+If an access token is configured, append ?access_token=my-secret:
+
+```
+http://<host>:7464/timetable/friendlyName.ics?access_token=my-secret
+```
 
 ### Specific element timetable (class, room, teacher, subject)
 
@@ -112,15 +120,20 @@ The service supports multiple languages and will attempt to detect the preferred
 3. `Accepted-Language` header from the request (your browser or calendar client should set this automatically based on your system settings)
 
 ### Cancelled lessons display
+
 The `cancelledDisplay` option in the user configuration allows you to control how cancelled lessons are handled in the generated `.ics` feed:
+
 - `hide`: Cancelled lessons will be completely excluded from the feed.
 - `show`: Cancelled lessons will be included and marked with `STATUS:CANCELLED`, allowing calendar clients to display them differently (e.g., crossed out).
 - `mark`: Same as `show` but extra text is added to the lesson title (e.g., "Math - CANCELLED")
 
 ### URL parameters
+
 The following query parameters can be used to override the default behavior for a specific request:
+
 - `lang`: Override the detected language for this request (e.g., `?lang=en`)
 - `cancelledDisplay`: Override the cancelled lessons display setting for this request (e.g., `?cancelledDisplay=mark`)
+- `access_token`: Access token (if configured) in format `?access_token=my-secret`
 
 ## Contributing
 

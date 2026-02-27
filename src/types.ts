@@ -6,6 +6,7 @@ export interface User {
     friendlyName: string;
     language?: "en" | "de";
     cancelledDisplay?: "hide" | "mark" | "show";
+    accessToken?: string;
 }
 
 export interface Config {
