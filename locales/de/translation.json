@@ -1,20 +1,21 @@
 {
-  "errors": {
-    "user_not_found": "Benutzer nicht gefunden",
-    "no_timetable": "Kein Stundenplan für diesen Benutzer gefunden",
-    "fetch_error": "Fehler beim Abrufen des Stundenplans",
-    "invalid_type": "Kein(e) {{type}} gefunden, der/die \"{{id}}\" entspricht (Groß-/Kleinschreibung ignoriert)"
-  },
-  "calendar": {
-    "name": "WebUntis Stundenplan",
-    "subject": "Fach",
-    "teacher": "Lehrer",
-    "room": "Raum",
-    "class": "Klasse",
-    "timetable": "Stundenplan",
-    "status": "Status",
-    "unknown_teacher": "Unbekannter Lehrer",
-    "unknown_class": "Unbekannte Klasse",
-    "cancelled": "Entfällt"
-  }
+    "errors": {
+        "user_not_found": "Benutzer nicht gefunden",
+        "no_timetable": "Kein Stundenplan für diesen Benutzer gefunden",
+        "fetch_error": "Fehler beim Abrufen des Stundenplans",
+        "invalid_type": "Kein(e) {{type}} gefunden, der/die \"{{id}}\" entspricht (Groß-/Kleinschreibung ignoriert)",
+        "invalid_access_token": "Ungültiger oder fehlender Zugriffstoken"
+    },
+    "calendar": {
+        "name": "WebUntis Stundenplan",
+        "subject": "Fach",
+        "teacher": "Lehrer",
+        "room": "Raum",
+        "class": "Klasse",
+        "timetable": "Stundenplan",
+        "status": "Status",
+        "unknown_teacher": "Unbekannter Lehrer",
+        "unknown_class": "Unbekannte Klasse",
+        "cancelled": "Entfällt"
+    }
 }

@@ -1,20 +1,21 @@
 import express from "express";
-import i18nextMiddleware from 'i18next-http-middleware';
-import i18next from './i18n';
+import i18nextMiddleware from "i18next-http-middleware";
+import i18next from "./i18n";
 import { configManager } from "./config";
 import { fetchTimetable } from "./webuntis";
 import { lessonsToIcs } from "./ics";
 import { CacheHandler } from "./cacheHandler";
 import { User } from "./types";
+import accessHandler from "./accessHandler";
 
 async function main() {
     await configManager.init();
     console.log(`Loaded config from ${configManager.configPath}`);
 
     const app = express();
-    // Add i18next middleware
+
     app.use(i18nextMiddleware.handle(i18next));
-    
+
     const icsCache = new CacheHandler(configManager.config.cacheDuration);
 
     function sendIcs(res: express.Response, filename: string, ics: string) {
@@ -22,27 +23,40 @@ async function main() {
             .setHeader("Content-Type", "text/calendar")
             .setHeader(
                 "Content-Disposition",
-                `attachment; filename=${filename}.ics`
+                `attachment; filename=${filename}.ics`,
             )
             .send(ics);
     }
 
-    app.get("/timetable/:name", async (req, res) => {
+    function normalizeParam(param: string | string[] | undefined): string {
+        if (!param) return "";
+
+        if (Array.isArray(param)) {
+            return param[0]?.trim().toLowerCase() ?? "";
+        }
+
+        return param.trim().toLowerCase();
+    }
+
+    app.get("/timetable/:name", accessHandler, async (req, res) => {
         try {
             const user = configManager.config.users.find(
                 (u: User) =>
                     u.friendlyName.toLowerCase() ===
-                    req.params.name.toLowerCase()
+                    normalizeParam(req.params.name),
             );
-            
-            // Set user's language if configured, but allow query parameter override
+
             if (user?.language && !req.query.lang) {
                 await req.i18n.changeLanguage(user.language);
             }
 
-            if (!user) return res.status(404).send(req.t('errors.user_not_found'));
+            if (!user)
+                return res.status(404).send(req.t("errors.user_not_found"));
 
-            const cancelledDisplay = (req.query.cancelledDisplay as User['cancelledDisplay']) || user.cancelledDisplay || "mark";
+            const cancelledDisplay =
+                (req.query.cancelledDisplay as User["cancelledDisplay"]) ||
+                user.cancelledDisplay ||
+                "mark";
             const cacheKey = `${user.username}:${req.i18n.language}:${cancelledDisplay}`;
             const cacheEntry = icsCache.get(cacheKey);
             if (cacheEntry) {
@@ -52,21 +66,21 @@ async function main() {
             const today = new Date();
             const startDate = new Date(today);
             startDate.setDate(
-                today.getDate() - configManager.config.daysBefore
+                today.getDate() - configManager.config.daysBefore,
             );
             const endDate = new Date(today);
             endDate.setDate(today.getDate() + configManager.config.daysAfter);
 
             const lessons = await fetchTimetable(user, startDate, endDate);
             if (!lessons || lessons.length === 0) {
-                return res.status(404).send(req.t('errors.no_timetable'));
+                return res.status(404).send(req.t("errors.no_timetable"));
             }
             const ics = lessonsToIcs(
                 lessons,
                 configManager.config.timezone || "Europe/Berlin",
                 user.friendlyName,
                 req.t,
-                cancelledDisplay
+                cancelledDisplay,
             );
 
             icsCache.set(cacheKey, ics);
@@ -77,36 +91,40 @@ async function main() {
                 return res.status(404).send(err.message);
             }
             console.error(err);
-            res.status(500).send(req.t('errors.fetch_error'));
+            res.status(500).send(req.t("errors.fetch_error"));
         }
     });
 
-    app.get("/timetable/:name/:type/:id", async (req, res) => {
+    app.get("/timetable/:name/:type/:id", accessHandler, async (req, res) => {
         try {
-            const name = req.params.name?.trim().toLowerCase() || "";
-            const rawType = req.params.type?.trim().toLowerCase() || "";
-            const rawId = req.params.id?.trim().toLowerCase() || "";
+            const name = normalizeParam(req.params.name);
+            const rawType = normalizeParam(req.params.type);
+            const rawId = normalizeParam(req.params.id);
 
             const user = configManager.config.users.find(
-                (u: User) => u.friendlyName.toLowerCase() === name.toLowerCase()
+                (u: User) =>
+                    u.friendlyName.toLowerCase() === name.toLowerCase(),
             );
-            
-            // Set user's language if configured, but allow query parameter override
+
             if (user?.language && !req.query.lang) {
                 await req.i18n.changeLanguage(user.language);
             }
 
-            if (!user) return res.status(404).send(req.t('errors.user_not_found'));
+            if (!user)
+                return res.status(404).send(req.t("errors.user_not_found"));
 
             const type = ["class", "room", "teacher", "subject"].includes(
-                rawType || ""
+                rawType || "",
             )
                 ? (rawType as "class" | "room" | "teacher" | "subject")
                 : undefined;
 
             const id = rawId ? String(rawId) : undefined;
 
-            const cancelledDisplay = (req.query.cancelledDisplay as User['cancelledDisplay']) || user.cancelledDisplay || "mark";
+            const cancelledDisplay =
+                (req.query.cancelledDisplay as User["cancelledDisplay"]) ||
+                user.cancelledDisplay ||
+                "mark";
             const cacheKey = `${user.username}:${type || "own"}:${id || ""}:${req.i18n.language}:${cancelledDisplay}`;
             const cacheEntry = icsCache.get(cacheKey);
             if (cacheEntry) {
@@ -116,13 +134,13 @@ async function main() {
             const today = new Date();
             const startDate = new Date(today);
             startDate.setDate(
-                today.getDate() - configManager.config.daysBefore
+                today.getDate() - configManager.config.daysBefore,
             );
             const endDate = new Date(today);
             endDate.setDate(today.getDate() + configManager.config.daysAfter);
 
             console.log(
-                `Fetching timetable for ${user.friendlyName}, type=${type}, id=${id}`
+                `Fetching timetable for ${user.friendlyName}, type=${type}, id=${id}`,
             );
 
             const lessons = await fetchTimetable(
@@ -130,13 +148,13 @@ async function main() {
                 startDate,
                 endDate,
                 type,
-                id?.toString()
+                id?.toString(),
             );
 
             console.log(`Fetched ${lessons.length} lessons`);
 
             if (!lessons || lessons.length === 0) {
-                return res.status(404).send(req.t('errors.no_timetable'));
+                return res.status(404).send(req.t("errors.no_timetable"));
             }
 
             const ics = lessonsToIcs(
@@ -144,7 +162,7 @@ async function main() {
                 configManager.config.timezone || "Europe/Berlin",
                 `${user.friendlyName} - ${type || "own"} ${id || ""}`,
                 req.t,
-                cancelledDisplay
+                cancelledDisplay,
             );
 
             icsCache.set(cacheKey, ics);
@@ -152,14 +170,14 @@ async function main() {
             return sendIcs(
                 res,
                 `${name}-${type || "own"}-${id?.toLocaleLowerCase() || ""}`,
-                ics
+                ics,
             );
         } catch (err: any) {
             if (err.code === 404) {
                 return res.status(404).send(err.message);
             }
             console.error(err);
-            res.status(500).send(req.t('errors.fetch_error'));
+            res.status(500).send(req.t("errors.fetch_error"));
         }
     });
 

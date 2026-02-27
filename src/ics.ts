@@ -1,15 +1,15 @@
 import ical, { ICalEventStatus } from "ical-generator";
 import { Lesson, User } from "./types";
-import { TFunction } from 'i18next';
+import { TFunction } from "i18next";
 
 export function lessonsToIcs(
     lessons: Lesson[],
     timezone: string,
     requestedTimetable: string,
-    t: TFunction, // Add translation function parameter
-    cancelledDisplay: User['cancelledDisplay'] = "mark"
+    t: TFunction,
+    cancelledDisplay: User["cancelledDisplay"] = "mark",
 ): string {
-    const cal = ical({ name: t('calendar.name'), timezone });
+    const cal = ical({ name: t("calendar.name"), timezone });
 
     for (const l of lessons) {
         // Skip cancelled lessons if cancelledDisplay is set to "hide"
@@ -20,8 +20,8 @@ export function lessonsToIcs(
         const endHour = Math.floor(l.endTime / 100);
         const endMinute = l.endTime % 100;
 
-        const unknownTeacher = t('calendar.unknown_teacher');
-        const unknownClass = t('calendar.unknown_class');
+        const unknownTeacher = t("calendar.unknown_teacher");
+        const unknownClass = t("calendar.unknown_class");
 
         const teacherCount = l.teacher.length;
         const teacherList = l.teacher.slice(0, 3).join(", ");
@@ -37,7 +37,11 @@ export function lessonsToIcs(
 
         // hide or use alternative text for ics SUMMARY if subject is unknown
         const calSummary = [
-            cancelledDisplay === "show" && l.status === "cancelled" ? "" : l.status === "cancelled" ? `[${t('calendar.cancelled')}]` : "",
+            cancelledDisplay === "show" && l.status === "cancelled"
+                ? ""
+                : l.status === "cancelled"
+                  ? `[${t("calendar.cancelled")}]`
+                  : "",
             l.subject === "Event" ? l.lstext : l.subject,
             teacherSummary !== unknownTeacher && `(${teacherSummary})`,
             teacherSummary !== unknownTeacher &&
@@ -48,13 +52,13 @@ export function lessonsToIcs(
             .filter(Boolean)
             .join(" ");
 
-        const calDescription = `${t('calendar.subject')}: ${
+        const calDescription = `${t("calendar.subject")}: ${
             l.subject
-        }\n${t('calendar.teacher')}: ${l.teacher.join(", ")}\n${t('calendar.room')}: ${
+        }\n${t("calendar.teacher")}: ${l.teacher.join(", ")}\n${t("calendar.room")}: ${
             l.room
-        }\n${t('calendar.class')}: ${l.class.join(
-            ", "
-        )}\n${t('calendar.timetable')}: ${requestedTimetable}\n${t('calendar.status')}: ${l.status}\nlstext: ${
+        }\n${t("calendar.class")}: ${l.class.join(
+            ", ",
+        )}\n${t("calendar.timetable")}: ${requestedTimetable}\n${t("calendar.status")}: ${l.status}\nlstext: ${
             l.lstext
         }`;
 
@@ -76,14 +80,14 @@ export function lessonsToIcs(
                 l.date.getMonth(),
                 l.date.getDate(),
                 startHour,
-                startMinute
+                startMinute,
             ),
             end: new Date(
                 l.date.getFullYear(),
                 l.date.getMonth(),
                 l.date.getDate(),
                 endHour,
-                endMinute
+                endMinute,
             ),
             summary: calSummary,
             location: l.room,

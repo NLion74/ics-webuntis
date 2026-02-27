@@ -13,7 +13,7 @@ class ConfigManager {
             envPath ??
                 process.env.CONFIG_PATH ??
                 process.env.CONFIG_FILE ??
-                "config.json"
+                "config.json",
         );
     }
 
@@ -47,7 +47,7 @@ class ConfigManager {
             typeof cfg.cacheDuration !== "number"
         ) {
             throw new Error(
-                "Invalid config.json structure (users[] and cacheDuration required)"
+                "Invalid config.json structure (users[] and cacheDuration required)",
             );
         }
 

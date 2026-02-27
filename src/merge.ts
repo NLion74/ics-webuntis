@@ -5,7 +5,7 @@ const LESSON_MERGE_GAP = 1;
 export function mergeLessons(
     lessons: Lesson[],
     schoolStartTime: number,
-    schoolEndTime: number
+    schoolEndTime: number,
 ): Lesson[] {
     if (!lessons.length) return [];
 
@@ -49,7 +49,7 @@ export function mergeLessons(
 
     merged.sort(
         (a, b) =>
-            a.date.getTime() - b.date.getTime() || a.startTime - b.startTime
+            a.date.getTime() - b.date.getTime() || a.startTime - b.startTime,
     );
     return merged;
 }
