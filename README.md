@@ -1,12 +1,12 @@
 # ICS-WebUntis
 
-ICS-WebUntis is a lightweight service that exports timetables from [WebUntis](https://www.untis.at/) as `.ics` calendar feeds.  
+ICS-WebUntis is a lightweight service that exports timetables from [WebUntis](https://www.untis.at/) as iCal/ ICS calendar feeds.  
 It is designed for reliability, minimal resource usage, and straightforward deployment via Docker.
 
 ## Features
 
 - Fetch timetables directly from WebUntis
-- Expose an `.ics` calendar endpoint for integration with any calendar client
+- Expose an iCal calendar endpoint for integration with any calendar client
 - Built-in caching to reduce load on WebUntis
 - Single-container deployment with Docker
 - Strictly validated configuration
@@ -75,7 +75,7 @@ The service requires a JSON configuration file.
 | `users[].username`         | string  | -       | Yes      | The user account name.                                                                                                                                                                                        |
 | `users[].password`         | string  | -       | Yes      | The user account password.                                                                                                                                                                                    |
 | `users[].baseurl`          | string  | -       | Yes      | The base URL of your WebUntis instance (e.g., `https://mese.webuntis.com/`).                                                                                                                                  |
-| `users[].friendlyName`     | string  | -       | Yes      | A unique local identifier for this user, used in the `.ics` URL.                                                                                                                                              |
+| `users[].friendlyName`     | string  | -       | Yes      | A unique local identifier for this user, used in the iCal/ ICS Endpoint.                                                                                                                                      |
 | `users[].language`         | string  | `en`    | No       | Preferred language for the user (supported values: `en`, `de`).                                                                                                                                               |
 | `users[].cancelledDisplay` | string  | `show`  | No       | How to handle cancelled lessons. Options: `hide` (exclude them entirely), `mark` (include them but marked as CANCELLED), `show` (include them and clients decide on how to handle the ICS `STATUS` property). |
 | `users[].accessToken`      | string  | -       | No       | Optional access token(s) required to access this user's timetable.                                                                                                                                            |
@@ -85,16 +85,16 @@ The service requires a JSON configuration file.
 ### Personal timetable
 
 ```
-http://<host>:7464/timetable/friendlyName.ics
+http://<host>:7464/timetable/friendlyName
 ```
 
 `<friendlyName>` is the one specified in the user configuration
-Returns the personal timetable as an .ics feed
+Returns the personal timetable as an iCal/ ICS feed
 
 If an access token is configured, append ?access_token=my-secret:
 
 ```
-http://<host>:7464/timetable/friendlyName.ics?access_token=my-secret
+http://<host>:7464/timetable/friendlyName?access_token=my-secret
 ```
 
 ### Specific element timetable (class, room, teacher, subject)
@@ -121,7 +121,7 @@ The service supports multiple languages and will attempt to detect the preferred
 
 ### Cancelled lessons display
 
-The `cancelledDisplay` option in the user configuration allows you to control how cancelled lessons are handled in the generated `.ics` feed:
+The `cancelledDisplay` option in the user configuration allows you to control how cancelled lessons are handled in the generated iCal/ ICS feed:
 
 - `hide`: Cancelled lessons will be completely excluded from the feed.
 - `show`: Cancelled lessons will be included and marked with `STATUS:CANCELLED`, allowing calendar clients to display them differently (e.g., crossed out).
