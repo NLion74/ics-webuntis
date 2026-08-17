@@ -45,15 +45,38 @@ export async function fetchTimetable(
 ): Promise<Lesson[]> {
     const untis = await getUntisSession(user);
 
+    const schoolyear = await untis.getCurrentSchoolyear();
+
+    if (startDate > endDate) {
+        throw Object.assign(new Error("startDate must be before endDate"), {
+            code: 400,
+        });
+    }
+
+    const clampedStartDate = new Date(
+        Math.max(startDate.getTime(), schoolyear.startDate.getTime()),
+    );
+
+    const clampedEndDate = new Date(
+        Math.min(endDate.getTime(), schoolyear.endDate.getTime()),
+    );
+
+    if (clampedStartDate > clampedEndDate) {
+        throw Object.assign(
+            new Error(
+                "Requested range does not overlap with the current school year",
+            ),
+            { code: 400 },
+        );
+    }
+
     try {
         let numericId: number | undefined;
 
         if (type && id !== undefined) {
             console.log(`Resolving ${type} name "${id}" to numeric ID`);
             try {
-                const schoolyear = await untis.getCurrentSchoolyear();
                 const idStr = String(id).toLowerCase();
-
                 switch (type) {
                     case "class": {
                         const classes = await untis.getClasses(
@@ -120,8 +143,8 @@ export async function fetchTimetable(
         let rawTimetable: any[];
         if (!type || numericId === undefined) {
             rawTimetable = await untis.getOwnTimetableForRange(
-                startDate,
-                endDate,
+                clampedStartDate,
+                clampedEndDate,
             );
         } else {
             const typeMap: Record<string, UntisElementType> = {
@@ -132,8 +155,8 @@ export async function fetchTimetable(
             };
 
             rawTimetable = await untis.getTimetableForRange(
-                startDate,
-                endDate,
+                clampedStartDate,
+                clampedEndDate,
                 numericId,
                 typeMap[type],
                 true,
