@@ -1,6 +1,7 @@
 import ical, { ICalEventStatus } from "ical-generator";
 import { Lesson, User } from "./types";
 import { TFunction } from "i18next";
+import { utcDateOnly } from "./utils";
 
 export function lessonsToIcs(
     lessons: Lesson[],
@@ -14,6 +15,48 @@ export function lessonsToIcs(
     for (const l of lessons) {
         // Skip cancelled lessons if cancelledDisplay is set to "hide"
         if (cancelledDisplay === "hide" && l.status === "cancelled") continue;
+
+        let calStatus: string;
+        switch (l.status) {
+            case "cancelled":
+                calStatus = "CANCELLED";
+                break;
+            case "irregular":
+            case "confirmed":
+            default:
+                calStatus = "CONFIRMED";
+                break;
+        }
+
+        if (l.allDay) {
+            const start = utcDateOnly(l.date);
+            const end = l.endDate
+                ? new Date(
+                      Date.UTC(
+                          l.endDate.getFullYear(),
+                          l.endDate.getMonth(),
+                          l.endDate.getDate() + 1,
+                      ),
+                  )
+                : undefined;
+
+            const summary =
+                cancelledDisplay !== "show" && l.status === "cancelled"
+                    ? `[${t("calendar.cancelled")}] ${l.lstext}`
+                    : l.lstext;
+
+            cal.createEvent({
+                start,
+                end,
+                allDay: true,
+                summary,
+                description: `${t("calendar.timetable")}: ${requestedTimetable}\n${t(
+                    "calendar.status",
+                )}: ${l.status}`,
+                status: calStatus as ICalEventStatus,
+            });
+            continue;
+        }
 
         const startHour = Math.floor(l.startTime / 100);
         const startMinute = l.startTime % 100;
@@ -62,18 +105,6 @@ export function lessonsToIcs(
             l.lstext
         }`;
 
-        let calStatus;
-        switch (l.status) {
-            case "cancelled":
-                calStatus = "CANCELLED";
-                break;
-            case "irregular":
-            case "confirmed":
-            default:
-                calStatus = "CONFIRMED";
-                break;
-        }
-
         cal.createEvent({
             start: new Date(
                 l.date.getFullYear(),
@@ -92,7 +123,6 @@ export function lessonsToIcs(
             summary: calSummary,
             location: l.room,
             description: calDescription,
-
             status: calStatus as ICalEventStatus,
         });
     }
