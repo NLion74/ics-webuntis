@@ -1,6 +1,7 @@
 # ICS-WebUntis
 
-ICS-WebUntis is a lightweight service that exports timetables from [WebUntis](https://www.untis.at/) as iCal/ ICS calendar feeds.  
+ICS-WebUntis is a lightweight service that exports timetables from [WebUntis](https://www.untis.at/) as iCal/ ICS calendar feeds.
+
 It is designed for reliability, minimal resource usage, and straightforward deployment via Docker.
 
 ## Features
@@ -14,6 +15,7 @@ It is designed for reliability, minimal resource usage, and straightforward depl
 - Fetch timetables for specific classes, rooms, teachers, or subjects by name or numeric ID
 - Multiple language support with automatic detection and user-specific language settings (currently supports English and German)
 - Configurable handling of cancelled lessons
+- Optional per-user inclusion of school holidays
 - Optional per-user access token protection
 
 ## Quick Start
@@ -43,6 +45,7 @@ This will fail without a 'config.json'
 ## Configuration
 
 The service requires a JSON configuration file.
+
 `config.json` example
 
 ```json
@@ -50,6 +53,7 @@ The service requires a JSON configuration file.
     "daysBefore": 7,
     "daysAfter": 14,
     "cacheDuration": 300,
+    "timezone": "Europe/Berlin",
     "users": [
         {
             "school": "myschool",
@@ -59,56 +63,64 @@ The service requires a JSON configuration file.
             "friendlyName": "student1",
             "language": "en",
             "cancelledDisplay": "mark",
+            "showHolidays": true,
             "accessToken": "my-secret-token"
         }
     ]
 }
 ```
 
-| Option                     | Type    | Default | Required | Description                                                                                                                                                                                                   |
-| :------------------------- | :------ | :------ | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `daysBefore`               | integer | `7`     | No       | Number of days in the past to fetch timetable entries for.                                                                                                                                                    |
-| `daysAfter`                | integer | `14`    | No       | Number of days in the future to fetch timetable entries for.                                                                                                                                                  |
-| `cacheDuration`            | integer | `300`   | No       | Cache duration in seconds (5 minutes by default). Prevents excessive requests to WebUntis.                                                                                                                    |
-| `users`                    | array   | `[]`    | Yes      | List of user objects for connecting to WebUntis.                                                                                                                                                              |
-| `users[].school`           | string  | -       | Yes      | The school name as used in WebUntis.                                                                                                                                                                          |
-| `users[].username`         | string  | -       | Yes      | The user account name.                                                                                                                                                                                        |
-| `users[].password`         | string  | -       | Yes      | The user account password.                                                                                                                                                                                    |
-| `users[].baseurl`          | string  | -       | Yes      | The base URL of your WebUntis instance (e.g., `https://mese.webuntis.com/`).                                                                                                                                  |
-| `users[].friendlyName`     | string  | -       | Yes      | A unique local identifier for this user, used in the iCal/ ICS Endpoint.                                                                                                                                      |
-| `users[].language`         | string  | `en`    | No       | Preferred language for the user (supported values: `en`, `de`).                                                                                                                                               |
-| `users[].cancelledDisplay` | string  | `show`  | No       | How to handle cancelled lessons. Options: `hide` (exclude them entirely), `mark` (include them but marked as CANCELLED), `show` (include them and clients decide on how to handle the ICS `STATUS` property). |
-| `users[].accessToken`      | string  | -       | No       | Optional access token(s) required to access this user's timetable.                                                                                                                                            |
+| Option                     | Type    | Default         | Required | Description                                                                                                                                                                                                   |
+| :------------------------- | :------ | :-------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `daysBefore`               | integer | `7`             | No       | Number of days in the past to fetch timetable entries for.                                                                                                                                                    |
+| `daysAfter`                | integer | `14`            | No       | Number of days in the future to fetch timetable entries for.                                                                                                                                                  |
+| `cacheDuration`            | integer | `300`           | No       | Cache duration in seconds (5 minutes by default). Prevents excessive requests to WebUntis.                                                                                                                    |
+| `timezone`                 | string  | `Europe/Berlin` | No       | IANA timezone name used to tag the generated iCal calendar (e.g., `Europe/Berlin`, `Europe/Vienna`).                                                                                                          |
+| `users`                    | array   | `[]`            | Yes      | List of user objects for connecting to WebUntis.                                                                                                                                                              |
+| `users[].school`           | string  | -               | Yes      | The school name as used in WebUntis.                                                                                                                                                                          |
+| `users[].username`         | string  | -               | Yes      | The user account name.                                                                                                                                                                                        |
+| `users[].password`         | string  | -               | Yes      | The user account password.                                                                                                                                                                                    |
+| `users[].baseurl`          | string  | -               | Yes      | The base URL of your WebUntis instance (e.g., `https://mese.webuntis.com/`).                                                                                                                                  |
+| `users[].friendlyName`     | string  | -               | Yes      | A unique local identifier for this user, used in the iCal/ ICS Endpoint.                                                                                                                                      |
+| `users[].language`         | string  | `en`            | No       | Preferred language for the user (supported values: `en`, `de`).                                                                                                                                               |
+| `users[].cancelledDisplay` | string  | `show`          | No       | How to handle cancelled lessons. Options: `hide` (exclude them entirely), `mark` (include them but marked as CANCELLED), `show` (include them and clients decide on how to handle the ICS `STATUS` property). |
+| `users[].showHolidays`     | boolean | `true`          | No       | Whether school holidays are included as all-day entries in this user's calendar feed. Set to `false` to omit them.                                                                                            |
+| `users[].accessToken`      | string  | -               | No       | Optional access token(s) required to access this user's timetable.                                                                                                                                            |
 
 ## Usage
 
 ### Personal timetable
 
-```
+```text
 http://<host>:7464/timetable/friendlyName
 ```
 
 `<friendlyName>` is the one specified in the user configuration
+
 Returns the personal timetable as an iCal/ ICS feed
 
 If an access token is configured, append ?access_token=my-secret:
 
-```
+```text
 http://<host>:7464/timetable/friendlyName?access_token=my-secret
 ```
 
 ### Specific element timetable (class, room, teacher, subject)
 
 `<type>`: `"class"`, `"room"`, `"teacher"`, or `"subject"`
+
 `<id>` Either the numeric ID or the name of the element (the service will resolve the name automatically)
 
 Example URLs:
 
 `http://localhost:7464/timetable/student1/class/10.3`
+
 `http://localhost:7464/timetable/student1/room/24`
+
 `http://localhost:7464/timetable/student1/teacher/MrSmith?lang=de`
 
 Replace `student1` with the friendly name of your user, and `class/10.3` with the desired type and ID.
+
 If the ID cannot be resolved, the service will attempt to use it as a numeric ID.
 
 ### Different languages
@@ -126,6 +138,10 @@ The `cancelledDisplay` option in the user configuration allows you to control ho
 - `hide`: Cancelled lessons will be completely excluded from the feed.
 - `show`: Cancelled lessons will be included and marked with `STATUS:CANCELLED`, allowing calendar clients to display them differently (e.g., crossed out).
 - `mark`: Same as `show` but extra text is added to the lesson title (e.g., "Math - CANCELLED")
+
+### Holidays
+
+The `showHolidays` option in the user configuration controls whether school holidays are included as all-day entries in the generated feed. It defaults to `true`; set it to `false` for a user if you only want lesson entries in their calendar.
 
 ### URL parameters
 
@@ -145,17 +161,18 @@ Feel free to contribute at any time! If so either create an issue to discuss you
 
 ```bash
 git clone https://github.com/NLion74/ics-webuntis
+
 cd ics-webuntis
 ```
 
 2. **Install dependencies:**
 
-```
+```text
 npm install
 ```
 
 1. **Run the project locally:**
 
-```
+```text
 npm run dev
 ```

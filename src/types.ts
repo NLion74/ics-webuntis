@@ -6,6 +6,7 @@ export interface User {
     friendlyName: string;
     language?: "en" | "de";
     cancelledDisplay?: "hide" | "mark" | "show";
+    showHolidays?: boolean;
     accessToken?: string;
 }
 
@@ -25,8 +26,11 @@ export interface Lesson {
     room: string;
     class: string[];
     date: Date;
+    endDate?: Date;
     lstext: string;
     status: string;
+    /* Renders as all day event */
+    allDay?: boolean;
 }
 
 export interface CacheEntry {

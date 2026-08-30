@@ -5,3 +5,11 @@ export function parseUntisDate(untisDate: number): Date {
     const day = parseInt(str.slice(6, 8), 10);
     return new Date(year, month, day);
 }
+
+export function utcDateOnly(d: Date): Date {
+    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+}
+
+export function dateToUntisNumber(d: Date): number {
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}

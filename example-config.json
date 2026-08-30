@@ -2,6 +2,7 @@
     "daysBefore": 7,
     "daysAfter": 14,
     "cacheDuration": 300,
+    "timezone": "Europe/Berlin",
     "users": [
         {
             "school": "",
@@ -11,6 +12,7 @@
             "friendlyName": "",
             "language": "en",
             "cancelledDisplay": "mark",
+            "showHolidays": true,
             "accessToken": ""
         }
     ]

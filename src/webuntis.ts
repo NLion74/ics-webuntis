@@ -1,6 +1,6 @@
-import { WebUntis, Timegrid } from "webuntis";
+import { WebUntis, Timegrid, Holiday } from "webuntis";
 import { Lesson, User, UntisElementType } from "./types";
-import { parseUntisDate } from "./utils";
+import { parseUntisDate, dateToUntisNumber } from "./utils";
 import { mergeLessons } from "./merge";
 
 interface SessionEntry {
@@ -19,6 +19,13 @@ async function getUntisSession(user: User): Promise<WebUntis> {
         return cached.untis;
     }
 
+    if (cached) {
+        try {
+            await cached.untis.logout();
+        } catch {}
+        sessionCache.delete(user.username);
+    }
+
     const baseUrl = user.baseurl
         .replace(/^https?:\/\//, "")
         .replace(/\/.*$/, "");
@@ -30,10 +37,27 @@ async function getUntisSession(user: User): Promise<WebUntis> {
         baseUrl,
     );
 
-    await untis.login();
+    try {
+        await untis.login();
+    } catch (error) {
+        throw Object.assign(
+            error instanceof Error ? error : new Error(String(error)),
+            { authError: true },
+        );
+    }
+
     sessionCache.set(user.username, { untis, timestamp: now });
 
     return untis;
+}
+
+function invalidateSession(user: User, untis: WebUntis): void {
+    sessionCache.delete(user.username);
+    untis.logout().catch(() => {});
+}
+
+function isRestrictedEntry(entry: any): boolean {
+    return !entry.su?.length && !entry.te?.length && !entry.ro?.length;
 }
 
 export async function fetchTimetable(
@@ -45,38 +69,38 @@ export async function fetchTimetable(
 ): Promise<Lesson[]> {
     const untis = await getUntisSession(user);
 
-    const schoolyear = await untis.getCurrentSchoolyear();
-
-    if (startDate > endDate) {
-        throw Object.assign(new Error("startDate must be before endDate"), {
-            code: 400,
-        });
-    }
-
-    const clampedStartDate = new Date(
-        Math.max(startDate.getTime(), schoolyear.startDate.getTime()),
-    );
-
-    const clampedEndDate = new Date(
-        Math.min(endDate.getTime(), schoolyear.endDate.getTime()),
-    );
-
-    if (clampedStartDate > clampedEndDate) {
-        throw Object.assign(
-            new Error(
-                "Requested range does not overlap with the current school year",
-            ),
-            { code: 400 },
-        );
-    }
-
     try {
+        if (startDate > endDate) {
+            throw Object.assign(new Error("startDate must be before endDate"), {
+                code: 400,
+            });
+        }
+
+        const schoolyear = await untis.getCurrentSchoolyear();
+
+        const clampedStartDate = new Date(
+            Math.max(startDate.getTime(), schoolyear.startDate.getTime()),
+        );
+        const clampedEndDate = new Date(
+            Math.min(endDate.getTime(), schoolyear.endDate.getTime()),
+        );
+
+        if (clampedStartDate > clampedEndDate) {
+            throw Object.assign(
+                new Error(
+                    "Requested range does not overlap with the current school year",
+                ),
+                { code: 400 },
+            );
+        }
+
         let numericId: number | undefined;
 
         if (type && id !== undefined) {
             console.log(`Resolving ${type} name "${id}" to numeric ID`);
             try {
                 const idStr = String(id).toLowerCase();
+
                 switch (type) {
                     case "class": {
                         const classes = await untis.getClasses(
@@ -134,7 +158,7 @@ export async function fetchTimetable(
                         new Error(
                             `No ${type} found matching "${id}" (case-insensitive)`,
                         ),
-                        { code: 404 },
+                        { code: 404, reason: "id_not_found" },
                     );
                 }
             }
@@ -164,7 +188,10 @@ export async function fetchTimetable(
         }
 
         if (!rawTimetable || rawTimetable.length === 0) {
-            throw Object.assign(new Error("No timetable found"), { code: 404 });
+            throw Object.assign(new Error("No timetable found"), {
+                code: 404,
+                reason: "empty_range",
+            });
         }
 
         const lessons: Lesson[] = rawTimetable
@@ -178,7 +205,8 @@ export async function fetchTimetable(
             .map((entry: any) => ({
                 startTime: entry.startTime,
                 endTime: entry.endTime,
-                subject: entry.su?.[0]?.name || "Event",
+                subject:
+                    entry.su?.[0]?.name || entry.sg || entry.lstext || "Event",
                 teacher: entry.te?.map((t: any) => t.name) || [
                     "Unknown Teacher",
                 ],
@@ -187,10 +215,14 @@ export async function fetchTimetable(
                 date: parseUntisDate(entry.date),
                 lstext: entry.lstext || "No Text",
                 status: entry.code || "confirmed",
+                allDay: isRestrictedEntry(entry),
             }));
 
         if (lessons.length === 0) {
-            throw Object.assign(new Error("No timetable found"), { code: 404 });
+            throw Object.assign(new Error("No timetable found"), {
+                code: 404,
+                reason: "empty_range",
+            });
         }
 
         const timegrids: Timegrid[] = await untis.getTimegrid();
@@ -203,7 +235,6 @@ export async function fetchTimetable(
             return mergeLessons(lessons, 0, 0);
         }
 
-        // Get lesson with earliest start time and latest end time
         const schoolStartTime = Math.min(
             ...validTimegrids.flatMap((tg) =>
                 tg.timeUnits.map((u) => u.startTime),
@@ -216,10 +247,55 @@ export async function fetchTimetable(
             ),
         );
 
-        return mergeLessons(lessons, schoolStartTime, schoolEndTime);
-    } catch (error) {
-        await untis.logout();
-        sessionCache.delete(user.username);
+        const merged = mergeLessons(lessons, schoolStartTime, schoolEndTime);
+
+        return merged.map((l) => ({
+            ...l,
+            allDay:
+                !!l.allDay &&
+                l.startTime <= schoolStartTime &&
+                l.endTime >= schoolEndTime,
+        }));
+    } catch (error: any) {
+        const isKnownAppError = typeof error?.code === "number";
+        if (error?.authError || !isKnownAppError) {
+            invalidateSession(user, untis);
+        }
         throw error;
+    }
+}
+
+export async function fetchHolidays(
+    user: User,
+    startDate: Date,
+    endDate: Date,
+): Promise<Lesson[]> {
+    const untis = await getUntisSession(user);
+    try {
+        const holidays: Holiday[] = await untis.getHolidays();
+        const startNum = dateToUntisNumber(startDate);
+        const endNum = dateToUntisNumber(endDate);
+
+        return holidays
+            .filter((h) => h.endDate >= startNum && h.startDate <= endNum)
+            .map((h) => ({
+                startTime: 0,
+                endTime: 0,
+                subject: h.longName || h.name,
+                teacher: [],
+                room: "",
+                class: [],
+                date: parseUntisDate(h.startDate),
+                endDate: parseUntisDate(h.endDate),
+                lstext: h.longName || h.name,
+                status: "confirmed",
+                allDay: true,
+            }));
+    } catch (error) {
+        console.warn(
+            `Failed to fetch holidays for ${user.friendlyName}:`,
+            error,
+        );
+        return [];
     }
 }
