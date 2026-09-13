@@ -2,7 +2,12 @@ import express from "express";
 import i18nextMiddleware from "i18next-http-middleware";
 import i18next from "./i18n";
 import { configManager } from "./config";
-import { fetchTimetable, fetchHolidays } from "./webuntis";
+import {
+    fetchTimetable,
+    fetchHolidays,
+    fetchExams,
+    fetchHomework,
+} from "./webuntis";
 import { lessonsToIcs } from "./ics";
 import { CacheHandler } from "./cacheHandler";
 import { Lesson, User } from "./types";
@@ -142,7 +147,7 @@ async function main() {
         }
     });
 
-    app.get("/timetable/:name/:type/:id", accessHandler, async (req, res) => {
+    app.get("/timetable/:name/:type{/:id}", accessHandler, async (req, res) => {
         try {
             const name = normalizeParam(req.params.name);
             const rawType = normalizeParam(req.params.type);
@@ -159,6 +164,38 @@ async function main() {
             if (!user)
                 return res.status(404).send(req.t("errors.user_not_found"));
 
+            const cancelledDisplay = resolveCancelledDisplay(
+                req.query.cancelledDisplay,
+                user.cancelledDisplay,
+            );
+
+            const { startDate, endDate } = getDateRange();
+
+            if (rawType === "exams" || rawType === "homework") {
+                const cacheKey = `${user.username}:${rawType}:${req.i18n.language}:${cancelledDisplay}`;
+                const cacheEntry = icsCache.get(cacheKey);
+                if (cacheEntry) {
+                    return sendIcs(res, `${name}-${rawType}`, cacheEntry.ics);
+                }
+
+                const entries =
+                    rawType === "exams"
+                        ? await fetchExams(user, startDate, endDate)
+                        : await fetchHomework(user, startDate, endDate);
+
+                const ics = lessonsToIcs(
+                    entries,
+                    configManager.config.timezone || "Europe/Berlin",
+                    `${user.friendlyName} - ${rawType}`,
+                    req.t,
+                    cancelledDisplay,
+                );
+
+                icsCache.set(cacheKey, ics);
+
+                return sendIcs(res, `${name}-${rawType}`, ics);
+            }
+
             const type = ["class", "room", "teacher", "subject"].includes(
                 rawType,
             )
@@ -167,17 +204,11 @@ async function main() {
 
             const id = rawId || undefined;
 
-            const cancelledDisplay = resolveCancelledDisplay(
-                req.query.cancelledDisplay,
-                user.cancelledDisplay,
-            );
             const cacheKey = `${user.username}:${type || "own"}:${id || ""}:${req.i18n.language}:${cancelledDisplay}`;
             const cacheEntry = icsCache.get(cacheKey);
             if (cacheEntry) {
                 return sendIcs(res, `${name}-${type || "own"}`, cacheEntry.ics);
             }
-
-            const { startDate, endDate } = getDateRange();
 
             console.log(
                 `Fetching timetable for ${user.friendlyName}, type=${type}, id=${id}`,

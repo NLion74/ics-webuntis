@@ -1,4 +1,10 @@
-import { WebUntis, Timegrid, Holiday } from "webuntis";
+import {
+    WebUntis,
+    Timegrid,
+    Holiday,
+    Exam as UntisExam,
+    Homework as UntisHomework,
+} from "webuntis";
 import { Lesson, User, UntisElementType } from "./types";
 import { parseUntisDate, dateToUntisNumber } from "./utils";
 import { mergeLessons } from "./merge";
@@ -295,6 +301,115 @@ export async function fetchHolidays(
         console.warn(
             `Failed to fetch holidays for ${user.friendlyName}:`,
             error,
+        );
+        return [];
+    }
+}
+
+export async function fetchExams(
+    user: User,
+    startDate: Date,
+    endDate: Date,
+): Promise<Lesson[]> {
+    const untis = await getUntisSession(user);
+    try {
+        const schoolyear = await untis.getCurrentSchoolyear();
+
+        const clampedStartDate = new Date(
+            Math.max(startDate.getTime(), schoolyear.startDate.getTime()),
+        );
+        const clampedEndDate = new Date(
+            Math.min(endDate.getTime(), schoolyear.endDate.getTime()),
+        );
+
+        if (clampedStartDate > clampedEndDate) {
+            console.warn(
+                `Requested exam range for ${user.friendlyName} does not overlap with the current school year`,
+            );
+            return [];
+        }
+
+        const exams: UntisExam[] = await untis.getExamsForRange(
+            clampedStartDate,
+            clampedEndDate,
+        );
+
+        return exams.map((e) => ({
+            startTime: e.startTime,
+            endTime: e.endTime,
+            subject: e.subject || "Unknown Subject",
+            teacher: e.teachers?.length ? e.teachers : ["Unknown Teacher"],
+            room: e.rooms?.length ? e.rooms.join(", ") : "Unknown Room",
+            class: e.studentClass?.length ? e.studentClass : ["Unknown Class"],
+            date: parseUntisDate(e.examDate),
+            lstext:
+                [e.examType, e.name, e.text].filter(Boolean).join(": ") ||
+                "Exam",
+            status: "confirmed",
+            allDay: false,
+        }));
+    } catch (error: any) {
+        console.warn(
+            `Failed to fetch exams for ${user.friendlyName}:`,
+            error?.response?.status,
+            error?.response?.data ?? error?.message ?? error,
+        );
+        return [];
+    }
+}
+
+export async function fetchHomework(
+    user: User,
+    startDate: Date,
+    endDate: Date,
+): Promise<Lesson[]> {
+    const untis = await getUntisSession(user);
+    try {
+        const schoolyear = await untis.getCurrentSchoolyear();
+
+        const clampedStartDate = new Date(
+            Math.max(startDate.getTime(), schoolyear.startDate.getTime()),
+        );
+        const clampedEndDate = new Date(
+            Math.min(endDate.getTime(), schoolyear.endDate.getTime()),
+        );
+
+        if (clampedStartDate > clampedEndDate) {
+            console.warn(
+                `Requested homework range for ${user.friendlyName} does not overlap with the current school year`,
+            );
+            return [];
+        }
+
+        const raw: any = await untis.getHomeWorksFor(
+            clampedStartDate,
+            clampedEndDate,
+        );
+
+        const homework: UntisHomework[] = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw?.homeworks)
+              ? raw.homeworks
+              : Object.values(raw?.homeworks ?? {});
+
+        return homework.map((h) => ({
+            startTime: 0,
+            endTime: 0,
+            subject: "Homework",
+            teacher: [],
+            room: "",
+            class: [],
+            date: parseUntisDate(h.dueDate),
+            lstext:
+                [h.text, h.remark].filter(Boolean).join(" — ") || "Homework",
+            status: "confirmed", // was "homework"
+            allDay: true,
+        }));
+    } catch (error: any) {
+        console.warn(
+            `Failed to fetch homework for ${user.friendlyName}:`,
+            error?.response?.status,
+            error?.response?.data ?? error?.message ?? error,
         );
         return [];
     }
