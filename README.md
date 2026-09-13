@@ -123,6 +123,15 @@ Replace `student1` with the friendly name of your user, and `class/10.3` with th
 
 If the ID cannot be resolved, the service will attempt to use it as a numeric ID.
 
+### Exams and homework feeds
+
+```text
+http://<host>:7464/timetable/friendlyName/exams
+http://<host>:7464/timetable/friendlyName/homework
+```
+
+Returns upcoming exams or homework (within the configured `daysBefore`/`daysAfter` range) as a separate iCal/ ICS feed. Unlike the personal and element timetable endpoints, they do not accept a `<id>` (class/room/teacher/subject) segment.
+
 ### Different languages
 
 The service supports multiple languages and will attempt to detect the preferred language for each request. The detection order is as follows:
@@ -171,7 +180,7 @@ cd ics-webuntis
 npm install
 ```
 
-1. **Run the project locally:**
+3. **Run the project locally:**
 
 ```text
 npm run dev
