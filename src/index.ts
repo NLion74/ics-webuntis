@@ -63,6 +63,14 @@ async function main() {
         return userDefault || "mark";
     }
 
+    function getClassesKey(user: User): string {
+        return JSON.stringify(
+            (user.classes ?? [])
+                .map((className) => className.trim().toLowerCase())
+                .sort(),
+        );
+    }
+
     function getDateRange(): { startDate: Date; endDate: Date } {
         const today = new Date();
         const startDate = new Date(today);
@@ -111,7 +119,8 @@ async function main() {
                 req.query.cancelledDisplay,
                 user.cancelledDisplay,
             );
-            const cacheKey = `${user.username}:${req.i18n.language}:${cancelledDisplay}`;
+            const classesKey = getClassesKey(user);
+            const cacheKey = `${user.username}:${req.i18n.language}:${cancelledDisplay}:${classesKey}`;
             const cacheEntry = icsCache.get(cacheKey);
             if (cacheEntry) {
                 return sendIcs(res, user.friendlyName, cacheEntry.ics);
@@ -204,7 +213,10 @@ async function main() {
 
             const id = rawId || undefined;
 
-            const cacheKey = `${user.username}:${type || "own"}:${id || ""}:${req.i18n.language}:${cancelledDisplay}`;
+            // The "own timetable" fallback (no type) is filtered by user.classes,
+            // so its cache key must change when that config changes.
+            const classesKey = type ? "" : getClassesKey(user);
+            const cacheKey = `${user.username}:${type || "own"}:${id || ""}:${req.i18n.language}:${cancelledDisplay}:${classesKey}`;
             const cacheEntry = icsCache.get(cacheKey);
             if (cacheEntry) {
                 return sendIcs(res, `${name}-${type || "own"}`, cacheEntry.ics);
